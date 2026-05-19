@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>mewtate</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <main>
+        <h1>mewtate</h1>
+        <p>Compare a wildtype protein sequence with a mutated sequence.</p>
+
+        <label for="wildtype-sequence">Wildtype sequence</label>
+        <textarea id="wildtype-sequence" rows="5">MKTFFVLLL</textarea>
+
+        <label for="mutant-sequence">Mutant sequence</label>
+        <textarea id="mutant-sequence" rows="5">MKWFFVLLL</textarea>
+
+        <button id="analyze-button">Analyze mutation</button>
+
+        <section id="results"></section>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>
