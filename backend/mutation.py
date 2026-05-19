@@ -56,19 +56,82 @@ def analyze_substitution(wildtype:str, mutant:str, position:int) -> dict:
         mutant_sequence = mutant_sequence.upper().strip()
         
         
-        if not wildtype_sequence:
+    if not wildtype_sequence:
             raise ValueError("Wildtype can't be empty")
         
-        if not mutant_sequence:
+    if not mutant_sequence:
             raise ValueError("Mutant can't be emtpy")
         
-        if len(wildtype_sequence) != len(mutant_sequence):
+    if len(wildtype_sequence) != len(mutant_sequence):
             raise ValueError("Only equal lengths support at the moment")
         
-        if set(wildtype_sequence) not in set(AMINO_ACIDS):
+    if set(wildtype_sequence) not in set(AMINO_ACIDS):
             raise ValueError("Wildtype contains invalid amino acids")
         
-        if set(mutant_sequence) not in set(AMINO_ACIDS):
+    if set(mutant_sequence) not in set(AMINO_ACIDS):
             raise ValueError("Mutant contains invalid amino acids")
+        
+        
+    substitutions = []
+
+    for index, (wildtype, mutant) in enumerate(
+
+        zip(wildtype_sequence, mutant_sequence),
+
+        start=1,
+
+    ):
+
+        if wildtype != mutant:
+
+            substitutions.append(
+
+                analyze_substitution(
+
+                    wildtype=wildtype,
+
+                    mutant=mutant,
+
+                    position=index,
+
+                )
+
+            )
+            
+    if not substitutions:
+
+        overall_severity = "none"
+
+    else:
+
+        max_score = max(change["severity_score"] for change in substitutions)
+
+        if max_score <= 1:
+
+            overall_severity = "low"
+
+        elif max_score <= 3:
+
+            overall_severity = "moderate"
+
+        else:
+
+            overall_severity = "high"
+
+    identity = 1 - (len(substitutions) / len(wildtype_sequence))
+
+    return {
+
+        "sequence_length": len(wildtype_sequence),
+
+        "num_substitutions": len(substitutions),
+
+        "identity_percent": round(identity * 100, 2),
+
+        "overall_severity": overall_severity,
+
+        "substitutions": substitutions,
+
+    }
         
         
