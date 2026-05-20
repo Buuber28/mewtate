@@ -45,6 +45,8 @@ function displayResults(data) {
                 <br>
                 Hydrophobicity difference: ${substitution.hydrophobicity_difference}
                 <br>
+                BLOSUM62 score: ${substitution.blosum62_score}
+                <br>
                 Severity: ${substitution.severity}
             </li>
         `;

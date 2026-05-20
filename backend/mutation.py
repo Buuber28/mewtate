@@ -1,4 +1,5 @@
 from backend.amino_acids import AMINO_ACIDS
+from backend.blosum import get_blosum62_score
 
 
 def analyze_substitution(wildtype: str, mutant: str, position: int) -> dict:
@@ -9,7 +10,14 @@ def analyze_substitution(wildtype: str, mutant: str, position: int) -> dict:
         mutant_props["hydrophobicity"] - wildtype_props["hydrophobicity"]
     )
 
+    blosum62_score = get_blosum62_score(wildtype, mutant)
+
     severity_score = 0
+
+    if blosum62_score <= -3:
+        severity_score += 2
+    elif blosum62_score < 0:
+        severity_score += 1
 
     if wildtype_props["charge"] != mutant_props["charge"]:
         severity_score += 2
@@ -39,6 +47,7 @@ def analyze_substitution(wildtype: str, mutant: str, position: int) -> dict:
         "charge_change": f"{wildtype_props['charge']} → {mutant_props['charge']}",
         "polarity_change": f"{wildtype_props['polarity']} → {mutant_props['polarity']}",
         "hydrophobicity_difference": round(hydrophobicity_difference, 2),
+        "blosum62_score": blosum62_score,
         "severity": severity,
         "severity_score": severity_score,
     }
