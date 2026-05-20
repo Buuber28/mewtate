@@ -50,3 +50,48 @@ li {
     color: darkred;
     font-weight: bold;
 }
+
+.sequence-visualization {
+    margin-top: 16px;
+    margin-bottom: 28px;
+    padding: 16px;
+    background: #fafafa;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+}
+
+.sequence-row {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+.sequence-label {
+    width: 48px;
+    font-weight: bold;
+    font-family: monospace;
+}
+
+.sequence-tiles {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.residue-tile {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    font-family: monospace;
+    font-weight: bold;
+    background: #e8e8e8;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+}
+
+.residue-tile.changed {
+    background: #ffd6a5;
+    border-color: #cc7a00;
+}

@@ -50,6 +50,8 @@ function displayResults(data) {
         `;
     }).join("");
 
+    const sequenceVisualizationHtml = buildSequenceVisualization(data);
+
     resultsSection.innerHTML = `
         <h2>Results</h2>
 
@@ -58,9 +60,55 @@ function displayResults(data) {
         <p><strong>Identity:</strong> ${data.identity_percent}%</p>
         <p><strong>Overall severity:</strong> ${data.overall_severity}</p>
 
+        <h3>Sequence comparison</h3>
+        ${sequenceVisualizationHtml}
+
         <h3>Detected substitutions</h3>
         <ul>
             ${substitutionsHtml || "<li>No substitutions detected.</li>"}
         </ul>
+    `;
+}
+
+function buildSequenceVisualization(data) {
+    const wildtypeSequence = document.getElementById("wildtype-sequence").value.toUpperCase().trim();
+    const mutantSequence = document.getElementById("mutant-sequence").value.toUpperCase().trim();
+
+    const changedPositions = new Set(
+        data.substitutions.map((substitution) => substitution.position)
+    );
+
+    let wildtypeTiles = "";
+    let mutantTiles = "";
+
+    for (let index = 0; index < wildtypeSequence.length; index++) {
+        const position = index + 1;
+        const isChanged = changedPositions.has(position);
+
+        wildtypeTiles += `
+            <span class="residue-tile ${isChanged ? "changed" : ""}" title="Position ${position}">
+                ${wildtypeSequence[index]}
+            </span>
+        `;
+
+        mutantTiles += `
+            <span class="residue-tile ${isChanged ? "changed" : ""}" title="Position ${position}">
+                ${mutantSequence[index]}
+            </span>
+        `;
+    }
+
+    return `
+        <div class="sequence-visualization">
+            <div class="sequence-row">
+                <span class="sequence-label">WT</span>
+                <div class="sequence-tiles">${wildtypeTiles}</div>
+            </div>
+
+            <div class="sequence-row">
+                <span class="sequence-label">Mut</span>
+                <div class="sequence-tiles">${mutantTiles}</div>
+            </div>
+        </div>
     `;
 }
