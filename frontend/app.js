@@ -1,5 +1,45 @@
 const analyzeButton = document.getElementById("analyze-button");
 const resultsSection = document.getElementById("results");
+const loadSequenceButton = document.getElementById("load-sequence-button");
+const sequenceEditor = document.getElementById("sequence-editor");
+const aminoAcidPalette = document.getElementById("amino-acid-palette");
+const aminoAcidLegend = document.getElementById("amino-acid-legend");
+
+const aminoAcids = [
+    "A", "R", "N", "D", "C",
+    "Q", "E", "G", "H", "I",
+    "L", "K", "M", "F", "P",
+    "S", "T", "W", "Y", "V"
+];
+
+const aminoAcidClasses = {
+    A: "nonpolar",
+    V: "nonpolar",
+    L: "nonpolar",
+    I: "nonpolar",
+    M: "nonpolar",
+    F: "nonpolar",
+    W: "nonpolar",
+    P: "nonpolar",
+    G: "nonpolar",
+
+    S: "polar",
+    T: "polar",
+    N: "polar",
+    Q: "polar",
+    C: "polar",
+    Y: "polar",
+
+    K: "positive",
+    R: "positive",
+    H: "positive",
+
+    D: "negative",
+    E: "negative",
+};
+
+let selectedResidueIndex = null;
+let editableMutantSequence = "";
 
 analyzeButton.addEventListener("click", async () => {
     const wildtypeSequence = document.getElementById("wildtype-sequence").value;
@@ -30,6 +70,24 @@ analyzeButton.addEventListener("click", async () => {
     } catch (error) {
         resultsSection.innerHTML = `<p class="error">Could not connect to backend.</p>`;
     }
+});
+
+loadSequenceButton.addEventListener("click", () => {
+
+   aminoAcidLegend.classList.remove("hidden");
+
+    const wildtypeSequence = document
+        .getElementById("wildtype-sequence")
+        .value
+        .toUpperCase()
+        .trim();
+
+    editableMutantSequence = wildtypeSequence;
+    document.getElementById("mutant-sequence").value = editableMutantSequence;
+
+    selectedResidueIndex = null;
+    renderSequenceEditor();
+    renderAminoAcidPalette();
 });
 
 function displayResults(data) {
@@ -114,4 +172,55 @@ function buildSequenceVisualization(data) {
             </div>
         </div>
     `;
+}
+
+function renderSequenceEditor() {
+    sequenceEditor.innerHTML = "";
+
+    for (let index = 0; index < editableMutantSequence.length; index++) {
+        const residue = editableMutantSequence[index];
+
+        const residueBlock = document.createElement("button");
+        residueBlock.textContent = residue;
+        residueBlock.className = `editable-residue aa-${aminoAcidClasses[residue]}`;
+
+        if (index === selectedResidueIndex) {
+            residueBlock.classList.add("selected");
+        }
+
+        residueBlock.title = `Position ${index + 1}`;
+
+        residueBlock.addEventListener("click", () => {
+            selectedResidueIndex = index;
+            renderSequenceEditor();
+        });
+
+        sequenceEditor.appendChild(residueBlock);
+    }
+}
+
+function renderAminoAcidPalette() {
+    aminoAcidPalette.innerHTML = "";
+
+    aminoAcids.forEach((aminoAcid) => {
+        const aminoAcidBlock = document.createElement("button");
+        aminoAcidBlock.textContent = aminoAcid;
+        aminoAcidBlock.className = `amino-acid-block aa-${aminoAcidClasses[aminoAcid]}`;
+
+        aminoAcidBlock.addEventListener("click", () => {
+            if (selectedResidueIndex === null) {
+                return;
+            }
+
+            editableMutantSequence =
+                editableMutantSequence.slice(0, selectedResidueIndex) +
+                aminoAcid +
+                editableMutantSequence.slice(selectedResidueIndex + 1);
+
+            document.getElementById("mutant-sequence").value = editableMutantSequence;
+            renderSequenceEditor();
+        });
+
+        aminoAcidPalette.appendChild(aminoAcidBlock);
+    });
 }

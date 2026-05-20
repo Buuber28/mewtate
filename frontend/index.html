@@ -7,18 +7,43 @@
 </head>
 <body>
     <main>
-        <h1>mewtate</h1>
-        <p>Compare a wildtype protein sequence with a mutated sequence.</p>
+        <header class="hero">
+    <p class="eyebrow">Protein mutation sandbox</p>
+    <h1>mewtate</h1>
+    <p class="hero-text">
+        Explore how amino acid substitutions change protein properties using sequence comparison,
+        biochemical classes, and mutation scoring.
+    </p>
+</header>
+<section class="card"></section>
 
         <label for="wildtype-sequence">Wildtype sequence</label>
-        <textarea id="wildtype-sequence" rows="5">MKTFFVLLL</textarea>
+        <textarea id="wildtype-sequence" rows="5"></textarea>
+
+        <button id="load-sequence-button">Load sequence into editor</button>
 
         <label for="mutant-sequence">Mutant sequence</label>
-        <textarea id="mutant-sequence" rows="5">MKWFFVLLL</textarea>
+        <textarea id="mutant-sequence" rows="5"></textarea>
+
+        <h3>Editable mutant sequence</h3>
+        <div id="sequence-editor"></div>
+
+        <h3>Amino acid palette</h3>
+        <div id="amino-acid-palette"></div>
+        <div id="amino-acid-legend" class="hidden">
+    <div class="legend">
+        <span class="legend-item aa-nonpolar">Nonpolar / hydrophobic</span>
+        <span class="legend-item aa-polar">Polar uncharged</span>
+        <span class="legend-item aa-positive">Positively charged</span>
+        <span class="legend-item aa-negative">Negatively charged</span>
+    </div>
+</div>
 
         <button id="analyze-button">Analyze mutation</button>
 
         <section id="results"></section>
+
+        </section>
     </main>
 
     <script src="app.js"></script>
