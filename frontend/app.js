@@ -35,21 +35,22 @@ analyzeButton.addEventListener("click", async () => {
 function displayResults(data) {
     const substitutionsHtml = data.substitutions.map((substitution) => {
         return `
-            <li>
-                <strong>${substitution.mutation}</strong>:
-                ${substitution.wildtype_name} → ${substitution.mutant_name}
-                <br>
-                Charge: ${substitution.charge_change}
-                <br>
-                Polarity: ${substitution.polarity_change}
-                <br>
-                Hydrophobicity difference: ${substitution.hydrophobicity_difference}
-                <br>
-                BLOSUM62 score: ${substitution.blosum62_score}
-                <br>
-                Severity: ${substitution.severity}
-            </li>
-        `;
+    <div class="substitution-card severity-${substitution.severity}">
+        <div class="substitution-header">
+            <strong>${substitution.mutation}</strong>
+            <span>${substitution.severity}</span>
+        </div>
+
+        <p>${substitution.wildtype_name} → ${substitution.mutant_name}</p>
+
+        <div class="substitution-details">
+            <div><strong>Charge</strong><br>${substitution.charge_change}</div>
+            <div><strong>Polarity</strong><br>${substitution.polarity_change}</div>
+            <div><strong>Hydrophobicity</strong><br>${substitution.hydrophobicity_difference}</div>
+            <div><strong>BLOSUM62</strong><br>${substitution.blosum62_score}</div>
+        </div>
+    </div>
+`;
     }).join("");
 
     const sequenceVisualizationHtml = buildSequenceVisualization(data);
@@ -66,9 +67,9 @@ function displayResults(data) {
         ${sequenceVisualizationHtml}
 
         <h3>Detected substitutions</h3>
-        <ul>
-            ${substitutionsHtml || "<li>No substitutions detected.</li>"}
-        </ul>
+        <div class="substitution-list">
+    ${substitutionsHtml || "<p>No substitutions detected.</p>"}
+        </div>
     `;
 }
 

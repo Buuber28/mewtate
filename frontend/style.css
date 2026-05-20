@@ -95,3 +95,64 @@ li {
     background: #ffd6a5;
     border-color: #cc7a00;
 }
+
+.substitution-list {
+    display: grid;
+    gap: 16px;
+}
+
+.substitution-card {
+    padding: 18px;
+    border-radius: 12px;
+    border: 1px solid #ddd;
+    background: #fafafa;
+}
+
+.substitution-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.substitution-header strong {
+    font-size: 20px;
+    font-family: monospace;
+}
+
+.substitution-header span {
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.substitution-details {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-top: 14px;
+}
+
+.substitution-details div {
+    padding: 10px;
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+}
+
+.severity-low .substitution-header span {
+    background: #d8f3dc;
+    color: #1b5e20;
+}
+
+.severity-moderate .substitution-header span {
+    background: #fff3bf;
+    color: #7a4f00;
+}
+
+.severity-high .substitution-header span {
+    background: #ffd6d6;
+    color: #8a0000;
+}
