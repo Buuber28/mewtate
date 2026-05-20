@@ -1,6 +1,16 @@
 from backend.amino_acids import AMINO_ACIDS
 from backend.blosum import get_blosum62_score
 
+def clean_sequence(sequence: str) -> str:
+    lines = sequence.strip().splitlines()
+
+    sequence_lines = [
+        line.strip()
+        for line in lines
+        if line.strip() and not line.startswith(">")
+    ]
+
+    return "".join(sequence_lines).replace(" ", "").upper()
 
 def analyze_substitution(wildtype: str, mutant: str, position: int) -> dict:
     wildtype_props = AMINO_ACIDS[wildtype]
@@ -57,8 +67,8 @@ def compare_equal_length_proteins(
     wildtype_sequence: str,
     mutant_sequence: str,
 ) -> dict:
-    wildtype_sequence = wildtype_sequence.upper().strip()
-    mutant_sequence = mutant_sequence.upper().strip()
+    wildtype_sequence = clean_sequence(wildtype_sequence)
+    mutant_sequence = clean_sequence(mutant_sequence)
 
     if not wildtype_sequence:
         raise ValueError("Wildtype sequence cannot be empty.")
