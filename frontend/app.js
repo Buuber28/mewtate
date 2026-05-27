@@ -4,6 +4,28 @@ const loadSequenceButton = document.getElementById("load-sequence-button");
 const sequenceEditor = document.getElementById("sequence-editor");
 const aminoAcidPalette = document.getElementById("amino-acid-palette");
 const aminoAcidLegend = document.getElementById("amino-acid-legend");
+const substituteModeButton = document.getElementById("substitute-mode-button");
+const insertModeButton = document.getElementById("insert-mode-button");
+const deleteModeButton = document.getElementById("delete-mode-button");
+
+substituteModeButton.addEventListener("click", () => {
+    mutationMode = "substitute";
+    resetSelections();
+    updateModeButtons();
+});
+
+insertModeButton.addEventListener("click", () => {
+    mutationMode = "insert";
+    resetSelections();
+    updateModeButtons();
+});
+
+deleteModeButton.addEventListener("click", () => {
+    mutationMode = "delete";
+    resetSelections();
+    updateModeButtons();
+});
+
 
 const aminoAcids = [
     "A", "R", "N", "D", "C",
@@ -40,6 +62,12 @@ const aminoAcidClasses = {
 
 let selectedResidueIndex = null;
 let editableMutantSequence = "";
+
+let selectedInsertPosition = null;
+
+let mutationMode = "substitute";
+
+
 
 analyzeButton.addEventListener("click", async () => {
     const wildtypeSequence = document.getElementById("wildtype-sequence").value;
@@ -177,21 +205,65 @@ function buildSequenceVisualization(data) {
 function renderSequenceEditor() {
     sequenceEditor.innerHTML = "";
 
+    if (mutationMode === "insert") {
+        for (let index = 0; index <= editableMutantSequence.length; index++) {
+            const insertSlot = document.createElement("button");
+            insertSlot.textContent = "+";
+            insertSlot.className = "insert-slot";
+
+            if (index === selectedInsertPosition) {
+                insertSlot.classList.add("selected-insert-slot");
+            }
+
+            insertSlot.title = `Insert at position ${index}`;
+
+            insertSlot.addEventListener("click", () => {
+                selectedInsertPosition = index;
+                renderSequenceEditor();
+            });
+
+            sequenceEditor.appendChild(insertSlot);
+
+            if (index < editableMutantSequence.length) {
+                const residue = editableMutantSequence[index];
+
+                const residueBlock = document.createElement("button");
+                residueBlock.textContent = residue;
+                residueBlock.className = `editable-residue aa-${aminoAcidClasses[residue]}`;
+                residueBlock.disabled = true;
+
+                sequenceEditor.appendChild(residueBlock);
+            }
+        }
+
+        return;
+    }
+
     for (let index = 0; index < editableMutantSequence.length; index++) {
         const residue = editableMutantSequence[index];
 
         const residueBlock = document.createElement("button");
         residueBlock.textContent = residue;
         residueBlock.className = `editable-residue aa-${aminoAcidClasses[residue]}`;
+        residueBlock.title = `Position ${index + 1}`;
 
-        if (index === selectedResidueIndex) {
+        if (mutationMode === "substitute" && index === selectedResidueIndex) {
             residueBlock.classList.add("selected");
         }
 
-        residueBlock.title = `Position ${index + 1}`;
-
         residueBlock.addEventListener("click", () => {
-            selectedResidueIndex = index;
+            if (mutationMode === "substitute") {
+                selectedResidueIndex = index;
+            }
+
+            if (mutationMode === "delete") {
+                editableMutantSequence =
+                    editableMutantSequence.slice(0, index) +
+                    editableMutantSequence.slice(index + 1);
+
+                document.getElementById("mutant-sequence").value = editableMutantSequence;
+            }
+
             renderSequenceEditor();
         });
 
@@ -208,19 +280,45 @@ function renderAminoAcidPalette() {
         aminoAcidBlock.className = `amino-acid-block aa-${aminoAcidClasses[aminoAcid]}`;
 
         aminoAcidBlock.addEventListener("click", () => {
-            if (selectedResidueIndex === null) {
-                return;
+            if (mutationMode === "substitute") {
+                if (selectedResidueIndex === null) {
+                    return;
+                }
+
+                editableMutantSequence =
+                    editableMutantSequence.slice(0, selectedResidueIndex) +
+                    aminoAcid +
+                    editableMutantSequence.slice(selectedResidueIndex + 1);
             }
 
-            editableMutantSequence =
-                editableMutantSequence.slice(0, selectedResidueIndex) +
-                aminoAcid +
-                editableMutantSequence.slice(selectedResidueIndex + 1);
+            else if (mutationMode === "insert") {
+                if (selectedInsertPosition === null) {
+                    return;
+                }
+
+                editableMutantSequence =
+                    editableMutantSequence.slice(0, selectedInsertPosition) +
+                    aminoAcid +
+                    editableMutantSequence.slice(selectedInsertPosition);
+            }
 
             document.getElementById("mutant-sequence").value = editableMutantSequence;
-            renderSequenceEditor();
+            resetSelections();
         });
 
         aminoAcidPalette.appendChild(aminoAcidBlock);
     });
+}
+
+function resetSelections() {
+    selectedResidueIndex = null;
+    selectedInsertPosition = null;
+
+    renderSequenceEditor();
+}
+
+function updateModeButtons() {
+    substituteModeButton.classList.toggle("active-mode", mutationMode === "substitute");
+    insertModeButton.classList.toggle("active-mode", mutationMode === "insert");
+    deleteModeButton.classList.toggle("active-mode", mutationMode === "delete");
 }

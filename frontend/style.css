@@ -73,6 +73,35 @@ button {
     color: white;
 }
 
+.insert-slot {
+    width: 24px;
+    height: 34px;
+    border-radius: 8px;
+    border: 1px dashed #9ca3af;
+    background: #f9fafb;
+    color: #6b7280;
+    font-weight: bold;
+    padding: 0;
+    margin-top: 0;
+}
+
+.insert-slot:hover {
+    background: #e0e7ff;
+    border-color: #4f46e5;
+    color: #4f46e5;
+}
+
+.insert-slot.selected-insert-slot {
+    background: #4f46e5;
+    border-color: #4f46e5;
+    color: white;
+}
+
+.editable-residue:disabled {
+    cursor: default;
+    opacity: 1;
+}
+
 button:hover {
     background: #4338ca;
 }
@@ -81,6 +110,24 @@ button:hover {
     margin-top: 0;
     padding: 0;
     color: #1f2937;
+}
+.mutation-modes {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 18px;
+}
+
+.mutation-modes button {
+    background: #e5e7eb;
+    color: #111827;
+}
+
+.mutation-modes button:hover {
+    background: #d1d5db;
+}
+.mutation-modes button.active-mode {
+    background: #cb9763;
+    color: white;
 }
 
 

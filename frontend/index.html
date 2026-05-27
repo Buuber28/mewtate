@@ -26,18 +26,26 @@
         <textarea id="mutant-sequence" rows="5"></textarea>
 
         <h3>Editable mutant sequence</h3>
+
+        <div class="mutation-modes">
+            <button id="substitute-mode-button">Substitute</button>
+            <button id="insert-mode-button">Insert</button>
+            <button id="delete-mode-button">Delete</button>
+        </div>
+
         <div id="sequence-editor"></div>
 
         <h3>Amino acid palette</h3>
         <div id="amino-acid-palette"></div>
+        
         <div id="amino-acid-legend" class="hidden">
-    <div class="legend">
-        <span class="legend-item aa-nonpolar">Nonpolar / hydrophobic</span>
-        <span class="legend-item aa-polar">Polar uncharged</span>
-        <span class="legend-item aa-positive">Positively charged</span>
-        <span class="legend-item aa-negative">Negatively charged</span>
-    </div>
-</div>
+            <div class="legend">
+                <span class="legend-item aa-nonpolar">Nonpolar / hydrophobic</span>
+                <span class="legend-item aa-polar">Polar uncharged</span>
+                <span class="legend-item aa-positive">Positively charged</span>
+                <span class="legend-item aa-negative">Negatively charged</span>
+            </div>
+        </div>
 
         <button id="analyze-button">Analyze mutation</button>
 
