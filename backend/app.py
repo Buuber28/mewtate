@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend.mutation import compare_equal_length_proteins
+from backend.mutation import compare_proteins
 
 app = FastAPI()
 
@@ -28,7 +28,7 @@ def read_root():
 @app.post("/compare-proteins")
 def compare_proteins_endpoint(request: SequenceComparisonRequest):
     try:
-        return compare_equal_length_proteins(
+        return compare_proteins(
             wildtype_sequence=request.wildtype_sequence,
             mutant_sequence=request.mutant_sequence,
         )

@@ -119,24 +119,54 @@ loadSequenceButton.addEventListener("click", () => {
 });
 
 function displayResults(data) {
-    const substitutionsHtml = data.substitutions.map((substitution) => {
-        return `
-    <div class="substitution-card severity-${substitution.severity}">
-        <div class="substitution-header">
-            <strong>${substitution.mutation}</strong>
-            <span>${substitution.severity}</span>
-        </div>
+    const edits = data.edits || data.substitutions || [];
 
-        <p>${substitution.wildtype_name} → ${substitution.mutant_name}</p>
+    const editsHtml = edits.map((edit) => {
+        if (edit.type === "substitution" || edit.mutation) {
+            return `
+                <div class="substitution-card severity-${edit.severity}">
+                    <div class="substitution-header">
+                        <strong>${edit.mutation}</strong>
+                        <span>${edit.severity}</span>
+                    </div>
 
-        <div class="substitution-details">
-            <div><strong>Charge</strong><br>${substitution.charge_change}</div>
-            <div><strong>Polarity</strong><br>${substitution.polarity_change}</div>
-            <div><strong>Hydrophobicity</strong><br>${substitution.hydrophobicity_difference}</div>
-            <div><strong>BLOSUM62</strong><br>${substitution.blosum62_score}</div>
-        </div>
-    </div>
-`;
+                    <p>${edit.wildtype_name} → ${edit.mutant_name}</p>
+
+                    <div class="substitution-details">
+                        <div><strong>Charge</strong><br>${edit.charge_change}</div>
+                        <div><strong>Polarity</strong><br>${edit.polarity_change}</div>
+                        <div><strong>Hydrophobicity</strong><br>${edit.hydrophobicity_difference}</div>
+                        <div><strong>BLOSUM62</strong><br>${edit.blosum62_score}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        if (edit.type === "insertion") {
+            return `
+                <div class="substitution-card severity-${edit.severity}">
+                    <div class="substitution-header">
+                        <strong>Insertion after position ${edit.position}</strong>
+                        <span>${edit.severity}</span>
+                    </div>
+                    <p>Inserted amino acid: <strong>${edit.inserted}</strong></p>
+                </div>
+            `;
+        }
+
+        if (edit.type === "deletion") {
+            return `
+                <div class="substitution-card severity-${edit.severity}">
+                    <div class="substitution-header">
+                        <strong>Deletion at position ${edit.position}</strong>
+                        <span>${edit.severity}</span>
+                    </div>
+                    <p>Deleted amino acid: <strong>${edit.deleted}</strong></p>
+                </div>
+            `;
+        }
+
+        return "";
     }).join("");
 
     const sequenceVisualizationHtml = buildSequenceVisualization(data);
@@ -145,44 +175,70 @@ function displayResults(data) {
         <h2>Results</h2>
 
         <p><strong>Sequence length:</strong> ${data.sequence_length}</p>
-        <p><strong>Number of substitutions:</strong> ${data.num_substitutions}</p>
         <p><strong>Identity:</strong> ${data.identity_percent}%</p>
-        <p><strong>Overall severity:</strong> ${data.overall_severity}</p>
 
         <h3>Sequence comparison</h3>
         ${sequenceVisualizationHtml}
 
-        <h3>Detected substitutions</h3>
+        <h3>Detected edits</h3>
         <div class="substitution-list">
-    ${substitutionsHtml || "<p>No substitutions detected.</p>"}
+            ${editsHtml || "<p>No edits detected.</p>"}
         </div>
     `;
 }
 
 function buildSequenceVisualization(data) {
-    const wildtypeSequence = document.getElementById("wildtype-sequence").value.toUpperCase().trim();
-    const mutantSequence = document.getElementById("mutant-sequence").value.toUpperCase().trim();
+    const wildtypeSequence = data.aligned_wildtype
+        || document.getElementById("wildtype-sequence").value.toUpperCase().trim();
+
+    const mutantSequence = data.aligned_mutant
+        || document.getElementById("mutant-sequence").value.toUpperCase().trim();
+
+    const edits = data.edits || data.substitutions || [];
 
     const changedPositions = new Set(
-        data.substitutions.map((substitution) => substitution.position)
+        edits
+            .filter((edit) => edit.type === "substitution" || edit.mutation)
+            .map((edit) => edit.position)
+    );
+
+    const insertionPositions = new Set(
+        edits
+            .filter((edit) => edit.type === "insertion")
+            .map((edit) => edit.position)
+    );
+
+    const deletionPositions = new Set(
+        edits
+            .filter((edit) => edit.type === "deletion")
+            .map((edit) => edit.position)
     );
 
     let wildtypeTiles = "";
     let mutantTiles = "";
+    let wildtypePosition = 0;
 
     for (let index = 0; index < wildtypeSequence.length; index++) {
-        const position = index + 1;
-        const isChanged = changedPositions.has(position);
+        const wtResidue = wildtypeSequence[index];
+        const mutResidue = mutantSequence[index];
+
+        if (wtResidue !== "-") {
+            wildtypePosition += 1;
+        }
+
+        const isSubstitution = changedPositions.has(wildtypePosition);
+        const isInsertion = wtResidue === "-";
+        const isDeletion = mutResidue === "-";
 
         wildtypeTiles += `
-            <span class="residue-tile ${isChanged ? "changed" : ""}" title="Position ${position}">
-                ${wildtypeSequence[index]}
+            <span class="residue-tile ${isSubstitution || isDeletion ? "changed" : ""} ${isInsertion ? "gap" : ""}" title="Alignment column ${index + 1}">
+                ${wtResidue}
             </span>
         `;
 
         mutantTiles += `
-            <span class="residue-tile ${isChanged ? "changed" : ""}" title="Position ${position}">
-                ${mutantSequence[index]}
+            <span class="residue-tile ${isSubstitution || isInsertion ? "changed" : ""} ${isDeletion ? "gap" : ""}" title="Alignment column ${index + 1}">
+                ${mutResidue}
             </span>
         `;
     }

@@ -1,5 +1,9 @@
 from backend.amino_acids import AMINO_ACIDS
 from backend.blosum import get_blosum62_score
+from backend.alignment import (
+    align_protein_sequences,
+    calculate_identity,
+)
 
 def clean_sequence(sequence: str) -> str:
     lines = sequence.strip().splitlines()
@@ -62,6 +66,54 @@ def analyze_substitution(wildtype: str, mutant: str, position: int) -> dict:
         "severity_score": severity_score,
     }
 
+def detect_alignment_edits(
+    aligned_wildtype: str,
+    aligned_mutant: str,
+) -> list:
+
+    edits = []
+
+    wildtype_position = 0
+
+    for wt_residue, mut_residue in zip(aligned_wildtype, aligned_mutant):
+
+        if wt_residue != "-":
+            wildtype_position += 1
+
+        # substitution
+        if (
+            wt_residue != "-"
+            and mut_residue != "-"
+            and wt_residue != mut_residue
+        ):
+            edits.append({
+                "type": "substitution",
+                **analyze_substitution(
+                    wildtype=wt_residue,
+                    mutant=mut_residue,
+                    position=wildtype_position,
+                )
+            })
+
+        # insertion
+        elif wt_residue == "-" and mut_residue != "-":
+            edits.append({
+                "type": "insertion",
+                "position": wildtype_position,
+                "inserted": mut_residue,
+                "severity": "moderate",
+            })
+
+        # deletion
+        elif wt_residue != "-" and mut_residue == "-":
+            edits.append({
+                "type": "deletion",
+                "position": wildtype_position,
+                "deleted": wt_residue,
+                "severity": "moderate",
+            })
+
+    return edits
 
 def compare_equal_length_proteins(
     wildtype_sequence: str,
@@ -123,10 +175,83 @@ def compare_equal_length_proteins(
 
     identity = 1 - (len(substitutions) / len(wildtype_sequence))
 
+    identity_percent = round(identity * 100, 2)
+
+    if identity_percent < 70:
+        raise ValueError(
+            "Sequences are too different to interpret confidently."
+        )
+
     return {
         "sequence_length": len(wildtype_sequence),
         "num_substitutions": len(substitutions),
         "identity_percent": round(identity * 100, 2),
         "overall_severity": overall_severity,
         "substitutions": substitutions,
+    }
+
+def compare_proteins(
+    wildtype_sequence: str,
+    mutant_sequence: str,
+) -> dict:
+
+    wildtype_sequence = clean_sequence(wildtype_sequence)
+    mutant_sequence = clean_sequence(mutant_sequence)
+
+    if not wildtype_sequence:
+        raise ValueError("Wildtype sequence cannot be empty.")
+
+    if not mutant_sequence:
+        raise ValueError("Mutant sequence cannot be empty.")
+
+    invalid_wildtype = sorted(set(wildtype_sequence) - set(AMINO_ACIDS.keys()))
+    invalid_mutant = sorted(set(mutant_sequence) - set(AMINO_ACIDS.keys()))
+
+    if invalid_wildtype:
+        raise ValueError(
+            f"Wildtype sequence contains invalid amino acid symbols: {', '.join(invalid_wildtype)}"
+        )
+
+    if invalid_mutant:
+        raise ValueError(
+            f"Mutant sequence contains invalid amino acid symbols: {', '.join(invalid_mutant)}"
+        )
+
+    # same-length fast path
+    if len(wildtype_sequence) == len(mutant_sequence):
+        return compare_equal_length_proteins(
+            wildtype_sequence,
+            mutant_sequence,
+        )
+
+    alignment = align_protein_sequences(
+        wildtype_sequence,
+        mutant_sequence,
+    )
+
+    aligned_wildtype = alignment["aligned_wildtype"]
+    aligned_mutant = alignment["aligned_mutant"]
+
+    identity = calculate_identity(
+        aligned_wildtype,
+        aligned_mutant,
+    )
+
+    if identity < 70:
+        raise ValueError(
+            "Sequences are too different to interpret confidently."
+        )
+
+    edits = detect_alignment_edits(
+        aligned_wildtype,
+        aligned_mutant,
+    )
+
+    return {
+        "sequence_length": len(wildtype_sequence),
+        "identity_percent": identity,
+        "alignment_score": alignment["score"],
+        "aligned_wildtype": aligned_wildtype,
+        "aligned_mutant": aligned_mutant,
+        "edits": edits,
     }
