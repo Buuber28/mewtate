@@ -8,53 +8,79 @@
 <body>
     <main>
         <header class="hero">
-    <p class="eyebrow">Protein mutation sandbox</p>
-    <h1>mewtate</h1>
-    <p class="hero-text">
-        Explore how amino acid substitutions change protein properties using sequence comparison 
-        and mutation scoring.
-    </p>
-</header>
-<section class="card"></section>
+            <p class="eyebrow">Protein mutation sandbox</p>
+            <h1>mewtate</h1>
+            <p class="hero-text">
+                Explore how amino acid substitutions change protein properties using sequence comparison
+                and mutation scoring.
+            </p>
+        </header>
 
-        <label for="wildtype-sequence">Wildtype sequence</label>
-        <textarea id="wildtype-sequence" rows="5"></textarea>
+        <section class="workspace-grid">
+            <section class="panel sequence-panel">
+                <div class="panel-header">
+                    <div>
+                        <p class="panel-kicker">Sequences</p>
+                        <h2>Compare proteins</h2>
+                    </div>
+                    <button id="analyze-button">Analyze mutation</button>
+                </div>
 
-        <button id="load-sequence-button">Load sequence into editor</button>
+                <div class="sequence-input-grid">
+                    <div>
+                        <label for="wildtype-sequence">Wildtype sequence</label>
+                        <textarea id="wildtype-sequence" rows="7"></textarea>
+                    </div>
 
-        <label for="mutant-sequence">Mutant sequence</label>
-        <textarea id="mutant-sequence" rows="5"></textarea>
+                    <div>
+                        <label for="mutant-sequence">Mutant sequence</label>
+                        <textarea id="mutant-sequence" rows="7"></textarea>
+                    </div>
+                </div>
+            </section>
 
-        <h3>Editable mutant sequence</h3>
+            <aside class="panel tools-panel">
+                <div class="panel-header compact">
+                    <div>
+                        <p class="panel-kicker">Optional tools</p>
+                        <h2>Refine input</h2>
+                    </div>
+                </div>
 
-        <div class="mutation-modes">
-            <button id="substitute-mode-button">Substitute</button>
-            <button id="insert-mode-button">Insert</button>
-            <button id="delete-mode-button">Delete</button>
-        </div>
+                <details class="tool-drawer">
+                    <summary>Editable mutant sequence</summary>
+                    <button id="load-sequence-button">Load sequence into editor</button>
 
-        <div id="sequence-editor"></div>
+                    <div class="mutation-modes">
+                        <button id="substitute-mode-button">Substitute</button>
+                        <button id="insert-mode-button">Insert</button>
+                        <button id="delete-mode-button">Delete</button>
+                    </div>
 
-        <h3>Amino acid palette</h3>
-        <div id="amino-acid-palette"></div>
-        
-        <div id="amino-acid-legend" class="hidden">
-            <div class="legend">
-                <span class="legend-item aa-nonpolar">Nonpolar / hydrophobic</span>
-                <span class="legend-item aa-polar">Polar uncharged</span>
-                <span class="legend-item aa-positive">Positively charged</span>
-                <span class="legend-item aa-negative">Negatively charged</span>
-            </div>
-        </div>
+                    <div id="sequence-editor"></div>
 
-        <label for="aligned-fasta">Aligned homolog FASTA (optional)</label>
-<textarea id="aligned-fasta" rows="6" placeholder=">seq1&#10;MKTFFVLLL&#10;>seq2&#10;MKTFFILLL&#10;>seq3&#10;MKTYFVLLL"></textarea>
+                    <h3>Amino acid palette</h3>
+                    <div id="amino-acid-palette"></div>
 
-        <button id="analyze-button">Analyze mutation</button>
+                    <div id="amino-acid-legend" class="hidden">
+                        <div class="legend">
+                            <span class="legend-item aa-nonpolar">Nonpolar / hydrophobic</span>
+                            <span class="legend-item aa-polar">Polar uncharged</span>
+                            <span class="legend-item aa-positive">Positively charged</span>
+                            <span class="legend-item aa-negative">Negatively charged</span>
+                        </div>
+                    </div>
+                </details>
+
+                <details class="tool-drawer">
+                    <summary>Aligned homolog FASTA</summary>
+                    <label for="aligned-fasta">Aligned homolog FASTA (optional)</label>
+                    <textarea id="aligned-fasta" rows="7" placeholder=">seq1&#10;MKTFFVLLL&#10;>seq2&#10;MKTFFILLL&#10;>seq3&#10;MKTYFVLLL"></textarea>
+                </details>
+            </aside>
+        </section>
 
         <section id="results"></section>
-
-        </section>
     </main>
 
     <script src="app.js"></script>

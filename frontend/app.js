@@ -389,3 +389,5 @@ function formatConservation(conservation) {
 
     return `${conservation.conservation_score}%`;
 }
+
+updateModeButtons();
