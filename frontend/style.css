@@ -6,6 +6,7 @@ body {
     padding: 48px 24px;
 }
 
+
 main {
     max-width: 960px;
     margin: 0 auto;
@@ -225,7 +226,7 @@ li {
 
 .substitution-details {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
     gap: 12px;
     margin-top: 14px;
 }

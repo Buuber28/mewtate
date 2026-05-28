@@ -4,6 +4,7 @@ from backend.alignment import (
     align_protein_sequences,
     calculate_identity,
 )
+from backend.conservation import parse_aligned_fasta, calculate_conservation
 
 def clean_sequence(sequence: str) -> str:
     lines = sequence.strip().splitlines()
@@ -193,6 +194,7 @@ def compare_equal_length_proteins(
 def compare_proteins(
     wildtype_sequence: str,
     mutant_sequence: str,
+    aligned_fasta: str | None = None,
 ) -> dict:
 
     wildtype_sequence = clean_sequence(wildtype_sequence)
@@ -219,10 +221,30 @@ def compare_proteins(
 
     # same-length fast path
     if len(wildtype_sequence) == len(mutant_sequence):
-        return compare_equal_length_proteins(
+        result = compare_equal_length_proteins(
             wildtype_sequence,
             mutant_sequence,
         )
+
+        edits = result["substitutions"]
+
+        if aligned_fasta:
+            aligned_sequences = parse_aligned_fasta(aligned_fasta)
+            conservation = calculate_conservation(aligned_sequences)
+
+            conservation_by_position = {
+                item["position"]: item
+                for item in conservation
+            }
+
+            for edit in edits:
+                position = edit.get("position")
+
+                if position in conservation_by_position:
+                    edit["conservation"] = conservation_by_position[position]
+
+        result["edits"] = edits
+        return result
 
     alignment = align_protein_sequences(
         wildtype_sequence,
@@ -246,6 +268,23 @@ def compare_proteins(
         aligned_wildtype,
         aligned_mutant,
     )
+
+    if aligned_fasta:
+        aligned_sequences = parse_aligned_fasta(aligned_fasta)
+        conservation = calculate_conservation(aligned_sequences)
+
+        conservation_by_position = {
+            item["position"]: item
+            for item in conservation
+        }
+
+        for edit in edits:
+            position = edit.get("position")
+
+            if position in conservation_by_position:
+                edit["conservation"] = conservation_by_position[position]
+
+    
 
     return {
         "sequence_length": len(wildtype_sequence),

@@ -70,6 +70,7 @@ let mutationMode = "substitute";
 
 
 analyzeButton.addEventListener("click", async () => {
+    const alignedFasta = document.getElementById("aligned-fasta").value;
     const wildtypeSequence = document.getElementById("wildtype-sequence").value;
     const mutantSequence = document.getElementById("mutant-sequence").value;
 
@@ -84,6 +85,7 @@ analyzeButton.addEventListener("click", async () => {
             body: JSON.stringify({
                 wildtype_sequence: wildtypeSequence,
                 mutant_sequence: mutantSequence,
+                aligned_fasta: alignedFasta || null,
             }),
         });
 
@@ -137,6 +139,7 @@ function displayResults(data) {
                         <div><strong>Polarity</strong><br>${edit.polarity_change}</div>
                         <div><strong>Hydrophobicity</strong><br>${edit.hydrophobicity_difference}</div>
                         <div><strong>BLOSUM62</strong><br>${edit.blosum62_score}</div>
+                        <div><strong>Conservation</strong><br>${formatConservation(edit.conservation)}</div>
                     </div>
                 </div>
             `;
@@ -377,4 +380,12 @@ function updateModeButtons() {
     substituteModeButton.classList.toggle("active-mode", mutationMode === "substitute");
     insertModeButton.classList.toggle("active-mode", mutationMode === "insert");
     deleteModeButton.classList.toggle("active-mode", mutationMode === "delete");
+}
+
+function formatConservation(conservation) {
+    if (!conservation) {
+        return "not provided";
+    }
+
+    return `${conservation.conservation_score}%`;
 }
