@@ -146,25 +146,35 @@ function displayResults(data) {
         }
 
         if (edit.type === "insertion") {
+            const insertionLabel = edit.length > 1
+                ? `Insertion of ${edit.length} residues after position ${edit.position}`
+                : `Insertion after position ${edit.position}`;
+            const insertedText = edit.length > 1 ? "Inserted sequence" : "Inserted amino acid";
+
             return `
                 <div class="substitution-card severity-${edit.severity}">
                     <div class="substitution-header">
-                        <strong>Insertion after position ${edit.position}</strong>
+                        <strong>${insertionLabel}</strong>
                         <span>${edit.severity}</span>
                     </div>
-                    <p>Inserted amino acid: <strong>${edit.inserted}</strong></p>
+                    <p>${insertedText}: <strong>${edit.inserted}</strong></p>
                 </div>
             `;
         }
 
         if (edit.type === "deletion") {
+            const deletionLabel = edit.length > 1
+                ? `Deletion from positions ${edit.start_position}-${edit.end_position}`
+                : `Deletion at position ${edit.position}`;
+            const deletedText = edit.length > 1 ? "Deleted sequence" : "Deleted amino acid";
+
             return `
                 <div class="substitution-card severity-${edit.severity}">
                     <div class="substitution-header">
-                        <strong>Deletion at position ${edit.position}</strong>
+                        <strong>${deletionLabel}</strong>
                         <span>${edit.severity}</span>
                     </div>
-                    <p>Deleted amino acid: <strong>${edit.deleted}</strong></p>
+                    <p>${deletedText}: <strong>${edit.deleted}</strong></p>
                 </div>
             `;
         }

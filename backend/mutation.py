@@ -114,7 +114,55 @@ def detect_alignment_edits(
                 "severity": "moderate",
             })
 
-    return edits
+    return group_consecutive_indels(edits)
+
+def group_consecutive_indels(edits: list) -> list:
+    grouped_edits = []
+
+    for edit in edits:
+        if edit["type"] not in {"insertion", "deletion"}:
+            grouped_edits.append(edit)
+            continue
+
+        previous_edit = grouped_edits[-1] if grouped_edits else None
+
+        if edit["type"] == "insertion":
+            can_group = (
+                previous_edit
+                and previous_edit["type"] == "insertion"
+                and previous_edit["position"] == edit["position"]
+            )
+
+            if can_group:
+                previous_edit["inserted"] += edit["inserted"]
+                previous_edit["length"] += 1
+            else:
+                grouped_edits.append({
+                    **edit,
+                    "length": 1,
+                })
+
+            continue
+
+        can_group = (
+            previous_edit
+            and previous_edit["type"] == "deletion"
+            and previous_edit["end_position"] + 1 == edit["position"]
+        )
+
+        if can_group:
+            previous_edit["deleted"] += edit["deleted"]
+            previous_edit["end_position"] = edit["position"]
+            previous_edit["length"] += 1
+        else:
+            grouped_edits.append({
+                **edit,
+                "start_position": edit["position"],
+                "end_position": edit["position"],
+                "length": 1,
+            })
+
+    return grouped_edits
 
 def compare_equal_length_proteins(
     wildtype_sequence: str,
