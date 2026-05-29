@@ -618,10 +618,21 @@ function formatProteinTitle(title) {
         return "Reviewed Swiss-Prot protein";
     }
 
-    return title
+    const cleanedTitle = title
         .replace(/^>\s*/, "")
         .replace(/\s+OS=.*$/, "")
         .replace(/^sp\|[^|]+\|[^\s]+\s*/, "");
+
+    const recommendedName = cleanedTitle.match(/RecName:\s*Full=([^;]+)/);
+
+    if (recommendedName) {
+        return recommendedName[1].trim();
+    }
+
+    return cleanedTitle
+        .replace(/\s+Contains:.*$/, "")
+        .replace(/\s+Flags:.*$/, "")
+        .trim();
 }
 
 updateModeButtons();
