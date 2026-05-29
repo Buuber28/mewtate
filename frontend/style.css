@@ -106,6 +106,7 @@ textarea {
     font-size: 16px;
     box-sizing: border-box;
 }
+
 button {
     margin-top: 0;
     padding: 12px 18px;
@@ -167,6 +168,9 @@ button {
 
 .tool-drawer label {
     margin-top: 0;
+    color: #4b5563;
+    font-size: 13px;
+    font-weight: 600;
 }
 
 .insert-slot {
@@ -201,6 +205,86 @@ button {
 button:hover {
     background: #4338ca;
 }
+
+button:disabled {
+    cursor: wait;
+    opacity: 0.65;
+}
+
+.homolog-search {
+    display: grid;
+    gap: 10px;
+    margin-bottom: 18px;
+}
+
+.homolog-search button {
+    justify-self: start;
+}
+
+.tool-status {
+    margin: 0;
+    color: #4b5563;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.tool-description {
+    margin: 0;
+    color: #4b5563;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.tool-status.error {
+    color: darkred;
+    font-weight: 700;
+}
+
+.tool-status.success {
+    color: #166534;
+    font-weight: 700;
+}
+
+.tool-status.success::before {
+    content: "✓";
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    margin-right: 6px;
+    border-radius: 50%;
+    background: #dcfce7;
+    color: #166534;
+    font-size: 12px;
+}
+
+.progress-bar {
+    height: 8px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: #e5e7eb;
+}
+
+.progress-bar span {
+    display: block;
+    width: 42%;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #818cf8, #4f46e5);
+    animation: progress-slide 1.25s ease-in-out infinite;
+}
+
+@keyframes progress-slide {
+    0% {
+        transform: translateX(-110%);
+    }
+
+    100% {
+        transform: translateX(260%);
+    }
+}
+
 .editable-residue,
 .amino-acid-block {
     margin-top: 0;

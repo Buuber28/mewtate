@@ -1,8 +1,13 @@
-from fastapi import FastAPI, HTTPException
+import asyncio
+import contextlib
+from threading import Event
+
+from fastapi import FastAPI, HTTPException, Request
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.conservation import parse_aligned_fasta, calculate_conservation
+from backend.homologs import find_homologs_and_calculate_conservation
 from backend.mutation import compare_proteins
 
 app = FastAPI()
@@ -23,6 +28,13 @@ class SequenceComparisonRequest(BaseModel):
 
 class ConservationRequest(BaseModel):
     aligned_fasta: str
+
+class HomologSearchRequest(BaseModel):
+    wildtype_sequence: str
+    max_homologs: int = 20
+    min_identity: float = 30.0
+    max_identity: float = 95.0
+    email: str | None = None
 
 @app.get("/")
 def read_root():
@@ -55,3 +67,43 @@ def conservation_endpoint(request: ConservationRequest):
 
     except ValueError as error:
         raise HTTPException(status_code=400, detail=str(error))
+
+
+@app.post("/find-homologs")
+async def find_homologs_endpoint(
+    http_request: Request,
+    request: HomologSearchRequest,
+):
+    cancel_event = Event()
+
+    async def watch_for_disconnect():
+        while not cancel_event.is_set():
+            if await http_request.is_disconnected():
+                cancel_event.set()
+                return
+
+            await asyncio.sleep(1)
+
+    disconnect_watcher = asyncio.create_task(watch_for_disconnect())
+
+    try:
+        return await asyncio.to_thread(
+            find_homologs_and_calculate_conservation,
+            wildtype_sequence=request.wildtype_sequence,
+            max_homologs=request.max_homologs,
+            min_identity=request.min_identity,
+            max_identity=request.max_identity,
+            email=request.email,
+            cancel_event=cancel_event,
+        )
+    except ValueError as error:
+        if cancel_event.is_set():
+            raise HTTPException(status_code=499, detail="Homolog search was cancelled.")
+
+        raise HTTPException(status_code=400, detail=str(error))
+    finally:
+        cancel_event.set()
+        disconnect_watcher.cancel()
+
+        with contextlib.suppress(asyncio.CancelledError):
+            await disconnect_watcher

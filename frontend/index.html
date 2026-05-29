@@ -17,6 +17,21 @@
         </header>
 
         <section class="workspace-grid">
+            <aside class="panel info-panel">
+                <div class="panel-header compact">
+                    <div>
+                        <p class="panel-kicker">Protein info</p>
+                        <h2>Identity</h2>
+                    </div>
+                </div>
+
+                <div id="protein-info" class="protein-info">
+                    <p class="empty-state">
+                        Use Find homologs to identify the closest reviewed protein match.
+                    </p>
+                </div>
+            </aside>
+
             <div class="main-column">
                 <section class="panel sequence-panel">
                     <div class="panel-header">
@@ -30,12 +45,12 @@
                     <div class="sequence-input-grid">
                         <div>
                             <label for="wildtype-sequence">Wildtype sequence</label>
-                            <textarea id="wildtype-sequence" rows="7"></textarea>
+                            <textarea id="wildtype-sequence" rows="5"></textarea>
                         </div>
 
                         <div>
                             <label for="mutant-sequence">Mutant sequence</label>
-                            <textarea id="mutant-sequence" rows="7"></textarea>
+                            <textarea id="mutant-sequence" rows="5"></textarea>
                         </div>
                     </div>
                 </section>
@@ -52,8 +67,21 @@
                 </div>
 
                 <details class="tool-drawer">
-                    <summary>Aligned homolog FASTA</summary>
-                    <label for="aligned-fasta">Paste aligned sequences</label>
+                    <summary>Conservation analysis</summary>
+                    <div class="homolog-search">
+                        <p class="tool-description">
+                            Find homologs automatically or paste your own pre-aligned homolog sequences below. Homolog search can take a minute or two.
+                            Custom Aligned FASTA is prioritized over homolog search. 
+                        </p>
+                        <button id="find-homologs-button">Find homologs</button>
+                        <div id="homolog-search-progress" class="progress-bar hidden">
+                            <span></span>
+                        </div>
+                        <p id="homolog-search-status" class="tool-status">
+                            Search Swiss-Prot homologs and build a Clustal Omega alignment for conservation analysis.
+                        </p>
+                    </div>
+                    <label for="aligned-fasta">Custom aligned FASTA</label>
                     <textarea id="aligned-fasta" rows="7" placeholder=">seq1&#10;MKTFFVLLL&#10;>seq2&#10;MKTFFILLL&#10;>seq3&#10;MKTYFVLLL"></textarea>
                 </details>
 

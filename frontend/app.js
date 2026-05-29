@@ -7,6 +7,10 @@ const aminoAcidLegend = document.getElementById("amino-acid-legend");
 const substituteModeButton = document.getElementById("substitute-mode-button");
 const insertModeButton = document.getElementById("insert-mode-button");
 const deleteModeButton = document.getElementById("delete-mode-button");
+const findHomologsButton = document.getElementById("find-homologs-button");
+const homologSearchStatus = document.getElementById("homolog-search-status");
+const homologSearchProgress = document.getElementById("homolog-search-progress");
+const proteinInfo = document.getElementById("protein-info");
 
 substituteModeButton.addEventListener("click", () => {
     mutationMode = "substitute";
@@ -66,11 +70,15 @@ let editableMutantSequence = "";
 let selectedInsertPosition = null;
 
 let mutationMode = "substitute";
+let foundHomologAlignedFasta = "";
+let foundHomologCount = 0;
+let homologSearchController = null;
 
 
 
 analyzeButton.addEventListener("click", async () => {
-    const alignedFasta = document.getElementById("aligned-fasta").value;
+    const customAlignedFasta = document.getElementById("aligned-fasta").value.trim();
+    const alignedFasta = customAlignedFasta || foundHomologAlignedFasta;
     const wildtypeSequence = document.getElementById("wildtype-sequence").value;
     const mutantSequence = document.getElementById("mutant-sequence").value;
 
@@ -99,6 +107,70 @@ analyzeButton.addEventListener("click", async () => {
         displayResults(data);
     } catch (error) {
         resultsSection.innerHTML = `<p class="error">Could not connect to backend.</p>`;
+    }
+});
+
+findHomologsButton.addEventListener("click", async () => {
+    const wildtypeSequence = document.getElementById("wildtype-sequence").value;
+
+    if (homologSearchController) {
+        homologSearchController.abort();
+    }
+
+    homologSearchController = new AbortController();
+
+    homologSearchStatus.textContent = "Searching NCBI BLAST and building alignment...";
+    homologSearchStatus.classList.remove("error", "success");
+    homologSearchProgress.classList.remove("hidden");
+    findHomologsButton.disabled = true;
+
+    try {
+        const response = await fetch("http://127.0.0.1:8000/find-homologs", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                wildtype_sequence: wildtypeSequence,
+                max_homologs: 20,
+                min_identity: 30,
+                max_identity: 95,
+            }),
+            signal: homologSearchController.signal,
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            homologSearchStatus.textContent = data.detail;
+            homologSearchStatus.classList.add("error");
+            return;
+        }
+
+        foundHomologAlignedFasta = data.aligned_fasta;
+        foundHomologCount = data.num_homologs;
+        updateProteinInfo(data.homologs?.[0]);
+        homologSearchStatus.textContent =
+            `Homolog alignment ready with ${foundHomologCount} filtered homologs. Press Analyze mutation to use it.`;
+        homologSearchStatus.classList.add("success");
+    } catch (error) {
+        if (error.name === "AbortError") {
+            homologSearchStatus.textContent = "Homolog search cancelled.";
+            return;
+        }
+
+        homologSearchStatus.textContent = "Could not connect to backend.";
+        homologSearchStatus.classList.add("error");
+    } finally {
+        findHomologsButton.disabled = false;
+        homologSearchProgress.classList.add("hidden");
+        homologSearchController = null;
+    }
+});
+
+window.addEventListener("pagehide", () => {
+    if (homologSearchController) {
+        homologSearchController.abort();
     }
 });
 
@@ -489,6 +561,67 @@ function cleanSequenceInput(sequence) {
         .join("")
         .replaceAll(" ", "")
         .toUpperCase();
+}
+
+function updateProteinInfo(topHomolog) {
+    if (!topHomolog) {
+        proteinInfo.innerHTML = `
+            <p class="empty-state">
+                No confident reviewed protein match was found.
+            </p>
+        `;
+        return;
+    }
+
+    const confidence = getProteinMatchConfidence(topHomolog);
+
+    proteinInfo.innerHTML = `
+        <div class="protein-match">
+            <span class="match-badge">${confidence}</span>
+            <h3>${formatProteinTitle(topHomolog.description || topHomolog.title)}</h3>
+            <dl>
+                <div>
+                    <dt>Accession</dt>
+                    <dd>${topHomolog.accession}</dd>
+                </div>
+                <div>
+                    <dt>Identity</dt>
+                    <dd>${topHomolog.identity}%</dd>
+                </div>
+                <div>
+                    <dt>Coverage</dt>
+                    <dd>${topHomolog.coverage}%</dd>
+                </div>
+                <div>
+                    <dt>Length</dt>
+                    <dd>${topHomolog.length} aa</dd>
+                </div>
+            </dl>
+        </div>
+    `;
+}
+
+function getProteinMatchConfidence(topHomolog) {
+    if (topHomolog.identity >= 98 && topHomolog.coverage >= 95) {
+        return "Exact or near-exact match";
+    }
+
+    if (topHomolog.identity >= 80 && topHomolog.coverage >= 80) {
+        return "Likely match";
+    }
+
+    return "Closest reviewed match";
+}
+
+function formatProteinTitle(title) {
+    if (!title) {
+        return "Reviewed Swiss-Prot protein";
+    }
+
+    return title
+        .replace(/^>\s*/, "")
+        .replace(/\s+OS=.*$/, "")
+        .replace(/^sp\|[^|]+\|[^\s]+\s*/, "");
 }
 
 updateModeButtons();
