@@ -139,7 +139,7 @@ function displayResults(data) {
                         <div><strong>Polarity</strong><br>${edit.polarity_change}</div>
                         <div><strong>Hydrophobicity</strong><br>${edit.hydrophobicity_difference}</div>
                         <div><strong>BLOSUM62</strong><br>${edit.blosum62_score}</div>
-                        <div><strong>Conservation</strong><br>${formatConservation(edit.conservation)}</div>
+                        ${buildConservationDetails(edit)}
                     </div>
                 </div>
             `;
@@ -158,6 +158,7 @@ function displayResults(data) {
                         <span>${edit.severity}</span>
                     </div>
                     <p>${insertedText}: <strong>${edit.inserted}</strong></p>
+                    ${buildIndelConservationDetails(edit)}
                 </div>
             `;
         }
@@ -175,6 +176,7 @@ function displayResults(data) {
                         <span>${edit.severity}</span>
                     </div>
                     <p>${deletedText}: <strong>${edit.deleted}</strong></p>
+                    ${buildIndelConservationDetails(edit)}
                 </div>
             `;
         }
@@ -183,6 +185,7 @@ function displayResults(data) {
     }).join("");
 
     const sequenceVisualizationHtml = buildSequenceVisualization(data);
+    const conservationHeatmapHtml = buildConservationHeatmap(data);
 
     resultsSection.innerHTML = `
         <h2>Results</h2>
@@ -192,6 +195,7 @@ function displayResults(data) {
 
         <h3>Sequence comparison</h3>
         ${sequenceVisualizationHtml}
+        ${conservationHeatmapHtml}
 
         <h3>Detected edits</h3>
         <div class="substitution-list">
@@ -398,6 +402,93 @@ function formatConservation(conservation) {
     }
 
     return `${conservation.conservation_score}%`;
+}
+
+function buildConservationDetails(edit) {
+    if (!edit.conservation) {
+        return `<div><strong>Conservation</strong><br>not provided</div>`;
+    }
+
+    return `
+        <div><strong>Most common residue</strong><br>${edit.conservation.most_common_residue || "none"}</div>
+        <div><strong>Conservation score</strong><br>${formatConservation(edit.conservation)}</div>
+        <div><strong>Conservation label</strong><br>${edit.conservation.label}</div>
+        <div><strong>Severity before conservation</strong><br>${edit.severity_before_conservation || edit.severity}</div>
+        <div><strong>Severity after conservation</strong><br>${edit.severity_after_conservation || edit.severity}</div>
+    `;
+}
+
+function buildIndelConservationDetails(edit) {
+    if (!edit.conservation) {
+        return "";
+    }
+
+    return `
+        <div class="substitution-details">
+            ${buildConservationDetails(edit)}
+        </div>
+    `;
+}
+
+function buildConservationHeatmap(data) {
+    if (!data.conservation || data.conservation.length === 0) {
+        return "";
+    }
+
+    const wildtypeSequence = cleanSequenceInput(
+        document.getElementById("wildtype-sequence").value
+    );
+
+    const tiles = data.conservation
+        .slice(0, wildtypeSequence.length)
+        .map((item, index) => {
+            const residue = wildtypeSequence[index] || item.most_common_residue || "-";
+            const score = item.conservation_score;
+            const heat = getConservationHeatColor(score);
+
+            return `
+                <span
+                    class="conservation-tile"
+                    style="background-color: ${heat.background}; border-color: ${heat.border}; color: ${heat.text};"
+                    title="Position ${item.position}: ${score}% conserved, ${item.label}"
+                >
+                    ${residue}
+                </span>
+            `;
+        })
+        .join("");
+
+    return `
+        <h3>Conservation heatmap</h3>
+        <div class="conservation-legend">
+            <span>Variable</span>
+            <span class="conservation-gradient"></span>
+            <span>Highly conserved</span>
+        </div>
+        <div class="conservation-heatmap">${tiles}</div>
+    `;
+}
+
+function getConservationHeatColor(score) {
+    const normalizedScore = Math.max(0, Math.min(score, 100)) / 100;
+    const lightness = 96 - (normalizedScore * 52);
+    const saturation = 48 + (normalizedScore * 42);
+    const text = normalizedScore >= 0.72 ? "white" : "#1f2937";
+
+    return {
+        background: `hsl(350, ${saturation}%, ${lightness}%)`,
+        border: `hsl(350, ${Math.min(saturation + 6, 96)}%, ${Math.max(lightness - 12, 34)}%)`,
+        text,
+    };
+}
+
+function cleanSequenceInput(sequence) {
+    return sequence
+        .split("\n")
+        .filter((line) => line.trim() && !line.trim().startsWith(">"))
+        .join("")
+        .replaceAll(" ", "")
+        .toUpperCase();
 }
 
 updateModeButtons();

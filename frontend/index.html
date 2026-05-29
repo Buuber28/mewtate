@@ -17,27 +17,31 @@
         </header>
 
         <section class="workspace-grid">
-            <section class="panel sequence-panel">
-                <div class="panel-header">
-                    <div>
-                        <p class="panel-kicker">Sequences</p>
-                        <h2>Compare proteins</h2>
-                    </div>
-                    <button id="analyze-button">Analyze mutation</button>
-                </div>
-
-                <div class="sequence-input-grid">
-                    <div>
-                        <label for="wildtype-sequence">Wildtype sequence</label>
-                        <textarea id="wildtype-sequence" rows="7"></textarea>
+            <div class="main-column">
+                <section class="panel sequence-panel">
+                    <div class="panel-header">
+                        <div>
+                            <p class="panel-kicker">Sequences</p>
+                            <h2>Compare proteins</h2>
+                        </div>
+                        <button id="analyze-button">Analyze mutation</button>
                     </div>
 
-                    <div>
-                        <label for="mutant-sequence">Mutant sequence</label>
-                        <textarea id="mutant-sequence" rows="7"></textarea>
+                    <div class="sequence-input-grid">
+                        <div>
+                            <label for="wildtype-sequence">Wildtype sequence</label>
+                            <textarea id="wildtype-sequence" rows="7"></textarea>
+                        </div>
+
+                        <div>
+                            <label for="mutant-sequence">Mutant sequence</label>
+                            <textarea id="mutant-sequence" rows="7"></textarea>
+                        </div>
                     </div>
-                </div>
-            </section>
+                </section>
+
+                <section id="results"></section>
+            </div>
 
             <aside class="panel tools-panel">
                 <div class="panel-header compact">
@@ -49,7 +53,7 @@
 
                 <details class="tool-drawer">
                     <summary>Aligned homolog FASTA</summary>
-                    <label for="aligned-fasta">Aligned homolog FASTA (optional)</label>
+                    <label for="aligned-fasta">Paste aligned sequences</label>
                     <textarea id="aligned-fasta" rows="7" placeholder=">seq1&#10;MKTFFVLLL&#10;>seq2&#10;MKTFFILLL&#10;>seq3&#10;MKTYFVLLL"></textarea>
                 </details>
 
@@ -79,10 +83,8 @@
                 </details>
             </aside>
         </section>
-
-        <section id="results"></section>
     </main>
 
-    <script src="app.js"></script>
+    <script src="app.js?v=conservation-details"></script>
 </body>
 </html>

@@ -47,6 +47,11 @@ main {
     align-items: start;
 }
 
+.main-column {
+    display: grid;
+    gap: 20px;
+}
+
 .panel {
     background: rgba(255, 255, 255, 0.92);
     border: 1px solid #e5e7eb;
@@ -224,7 +229,6 @@ button:hover {
 
 
 #results {
-    margin-top: 32px;
     padding: 24px;
     border: 1px solid #e5e7eb;
     border-radius: 16px;
@@ -284,6 +288,48 @@ li {
 .residue-tile.changed {
     background: #ffd6a5;
     border-color: #cc7a00;
+}
+
+.conservation-heatmap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 12px;
+    margin-bottom: 28px;
+    padding: 16px;
+    background: #fafafa;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+}
+
+.conservation-legend {
+    display: grid;
+    grid-template-columns: auto minmax(140px, 240px) auto;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+    color: #4b5563;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.conservation-gradient {
+    height: 10px;
+    border-radius: 999px;
+    border: 1px solid #fecdd3;
+    background: linear-gradient(90deg, hsl(350, 48%, 96%), hsl(350, 90%, 44%));
+}
+
+.conservation-tile {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-family: monospace;
+    font-weight: bold;
 }
 
 .substitution-list {

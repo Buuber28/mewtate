@@ -67,6 +67,46 @@ def analyze_substitution(wildtype: str, mutant: str, position: int) -> dict:
         "severity_score": severity_score,
     }
 
+def increase_severity(severity: str) -> str:
+    severity_order = ["low", "moderate", "high"]
+
+    if severity not in severity_order:
+        return severity
+
+    severity_index = severity_order.index(severity)
+    next_index = min(severity_index + 1, len(severity_order) - 1)
+
+    return severity_order[next_index]
+
+def apply_conservation_to_edits(edits: list, conservation: list[dict]) -> None:
+    conservation_by_position = {
+        item["position"]: item
+        for item in conservation
+    }
+
+    for edit in edits:
+        position = edit.get("position")
+
+        if position not in conservation_by_position:
+            continue
+
+        conservation_item = conservation_by_position[position]
+        severity_before = edit["severity"]
+        severity_after = severity_before
+
+        if conservation_item["label"] == "highly conserved":
+            severity_after = increase_severity(severity_after)
+        elif (
+            conservation_item["label"] == "moderately conserved"
+            and severity_after == "low"
+        ):
+            severity_after = increase_severity(severity_after)
+
+        edit["conservation"] = conservation_item
+        edit["severity_before_conservation"] = severity_before
+        edit["severity_after_conservation"] = severity_after
+        edit["severity"] = severity_after
+
 def detect_alignment_edits(
     aligned_wildtype: str,
     aligned_mutant: str,
@@ -279,17 +319,8 @@ def compare_proteins(
         if aligned_fasta:
             aligned_sequences = parse_aligned_fasta(aligned_fasta)
             conservation = calculate_conservation(aligned_sequences)
-
-            conservation_by_position = {
-                item["position"]: item
-                for item in conservation
-            }
-
-            for edit in edits:
-                position = edit.get("position")
-
-                if position in conservation_by_position:
-                    edit["conservation"] = conservation_by_position[position]
+            apply_conservation_to_edits(edits, conservation)
+            result["conservation"] = conservation
 
         result["edits"] = edits
         return result
@@ -320,21 +351,11 @@ def compare_proteins(
     if aligned_fasta:
         aligned_sequences = parse_aligned_fasta(aligned_fasta)
         conservation = calculate_conservation(aligned_sequences)
-
-        conservation_by_position = {
-            item["position"]: item
-            for item in conservation
-        }
-
-        for edit in edits:
-            position = edit.get("position")
-
-            if position in conservation_by_position:
-                edit["conservation"] = conservation_by_position[position]
+        apply_conservation_to_edits(edits, conservation)
 
     
 
-    return {
+    result = {
         "sequence_length": len(wildtype_sequence),
         "identity_percent": identity,
         "alignment_score": alignment["score"],
@@ -342,3 +363,8 @@ def compare_proteins(
         "aligned_mutant": aligned_mutant,
         "edits": edits,
     }
+
+    if aligned_fasta:
+        result["conservation"] = conservation
+
+    return result
