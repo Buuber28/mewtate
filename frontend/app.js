@@ -1,4 +1,7 @@
-const analyzeButton = document.getElementById("analyze-button");
+const quickAnalysisButton = document.getElementById("quick-analysis-button");
+const deepAnalysisButton = document.getElementById("deep-analysis-button");
+const deepAnalysisStatus = document.getElementById("deep-analysis-status");
+const deepAnalysisProgress = document.getElementById("deep-analysis-progress");
 const resultsSection = document.getElementById("results");
 const loadSequenceButton = document.getElementById("load-sequence-button");
 const sequenceEditor = document.getElementById("sequence-editor");
@@ -7,9 +10,6 @@ const aminoAcidLegend = document.getElementById("amino-acid-legend");
 const substituteModeButton = document.getElementById("substitute-mode-button");
 const insertModeButton = document.getElementById("insert-mode-button");
 const deleteModeButton = document.getElementById("delete-mode-button");
-const findHomologsButton = document.getElementById("find-homologs-button");
-const homologSearchStatus = document.getElementById("homolog-search-status");
-const homologSearchProgress = document.getElementById("homolog-search-progress");
 const proteinInfo = document.getElementById("protein-info");
 
 substituteModeButton.addEventListener("click", () => {
@@ -72,19 +72,35 @@ let selectedInsertPosition = null;
 let mutationMode = "substitute";
 let foundHomologAlignedFasta = "";
 let foundHomologCount = 0;
-let homologSearchController = null;
+let deepAnalysisController = null;
+let foundFunctionalRegions = [];
 
 
 
-analyzeButton.addEventListener("click", async () => {
+quickAnalysisButton.addEventListener("click", async () => {
+    await analyzeMutation({ useDeepAnalysis: false });
+});
+
+deepAnalysisButton.addEventListener("click", async () => {
+    await analyzeMutation({ useDeepAnalysis: true });
+});
+
+async function analyzeMutation({ useDeepAnalysis }) {
     const customAlignedFasta = document.getElementById("aligned-fasta").value.trim();
-    const alignedFasta = customAlignedFasta || foundHomologAlignedFasta;
     const wildtypeSequence = document.getElementById("wildtype-sequence").value;
     const mutantSequence = document.getElementById("mutant-sequence").value;
+    let alignedFasta = customAlignedFasta;
+    let functionalRegions = [];
 
     resultsSection.innerHTML = "<p>Analyzing...</p>";
 
     try {
+        if (useDeepAnalysis) {
+            const deepData = await runDeepAnalysisSetup(wildtypeSequence);
+            alignedFasta = customAlignedFasta || deepData.aligned_fasta;
+            functionalRegions = deepData.functional_regions || [];
+        }
+
         const response = await fetch("http://127.0.0.1:8000/compare-proteins", {
             method: "POST",
             headers: {
@@ -94,6 +110,7 @@ analyzeButton.addEventListener("click", async () => {
                 wildtype_sequence: wildtypeSequence,
                 mutant_sequence: mutantSequence,
                 aligned_fasta: alignedFasta || null,
+                functional_regions: functionalRegions.length ? functionalRegions : null,
             }),
         });
 
@@ -106,71 +123,69 @@ analyzeButton.addEventListener("click", async () => {
 
         displayResults(data);
     } catch (error) {
-        resultsSection.innerHTML = `<p class="error">Could not connect to backend.</p>`;
-    }
-});
-
-findHomologsButton.addEventListener("click", async () => {
-    const wildtypeSequence = document.getElementById("wildtype-sequence").value;
-
-    if (homologSearchController) {
-        homologSearchController.abort();
-    }
-
-    homologSearchController = new AbortController();
-
-    homologSearchStatus.textContent = "Searching NCBI BLAST and building alignment...";
-    homologSearchStatus.classList.remove("error", "success");
-    homologSearchProgress.classList.remove("hidden");
-    findHomologsButton.disabled = true;
-
-    try {
-        const response = await fetch("http://127.0.0.1:8000/find-homologs", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                wildtype_sequence: wildtypeSequence,
-                max_homologs: 20,
-                min_identity: 30,
-                max_identity: 95,
-            }),
-            signal: homologSearchController.signal,
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            homologSearchStatus.textContent = data.detail;
-            homologSearchStatus.classList.add("error");
-            return;
-        }
-
-        foundHomologAlignedFasta = data.aligned_fasta;
-        foundHomologCount = data.num_homologs;
-        updateProteinInfo(data.homologs?.[0]);
-        homologSearchStatus.textContent =
-            `Homolog alignment ready with ${foundHomologCount} filtered homologs. Press Analyze mutation to use it.`;
-        homologSearchStatus.classList.add("success");
-    } catch (error) {
         if (error.name === "AbortError") {
-            homologSearchStatus.textContent = "Homolog search cancelled.";
+            resultsSection.innerHTML = "<p>Deep analysis cancelled.</p>";
             return;
         }
 
-        homologSearchStatus.textContent = "Could not connect to backend.";
-        homologSearchStatus.classList.add("error");
+        resultsSection.innerHTML = `<p class="error">Could not connect to backend.</p>`;
     } finally {
-        findHomologsButton.disabled = false;
-        homologSearchProgress.classList.add("hidden");
-        homologSearchController = null;
+        deepAnalysisProgress.classList.add("hidden");
+        quickAnalysisButton.disabled = false;
+        deepAnalysisButton.disabled = false;
+        deepAnalysisController = null;
     }
-});
+}
+
+async function runDeepAnalysisSetup(wildtypeSequence) {
+    if (deepAnalysisController) {
+        deepAnalysisController.abort();
+    }
+
+    deepAnalysisController = new AbortController();
+
+    deepAnalysisStatus.textContent = "Finding homologs, building alignment, and fetching functional regions...";
+    deepAnalysisStatus.classList.remove("error", "success");
+    deepAnalysisProgress.classList.remove("hidden");
+    quickAnalysisButton.disabled = true;
+    deepAnalysisButton.disabled = true;
+
+    const response = await fetch("http://127.0.0.1:8000/find-homologs", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            wildtype_sequence: wildtypeSequence,
+            max_homologs: 20,
+            min_identity: 30,
+            max_identity: 95,
+        }),
+        signal: deepAnalysisController.signal,
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        deepAnalysisStatus.textContent = data.detail;
+        deepAnalysisStatus.classList.add("error");
+        throw new Error(data.detail);
+    }
+
+    foundHomologAlignedFasta = data.aligned_fasta;
+    foundHomologCount = data.num_homologs;
+    foundFunctionalRegions = data.functional_regions || [];
+    updateProteinInfo(data.homologs?.[0], foundFunctionalRegions);
+    deepAnalysisStatus.textContent =
+        `Deep analysis data ready with ${foundHomologCount} filtered homologs. Running mutation analysis...`;
+    deepAnalysisStatus.classList.add("success");
+
+    return data;
+}
 
 window.addEventListener("pagehide", () => {
-    if (homologSearchController) {
-        homologSearchController.abort();
+    if (deepAnalysisController) {
+        deepAnalysisController.abort();
     }
 });
 
@@ -212,6 +227,7 @@ function displayResults(data) {
                         <div><strong>Hydrophobicity</strong><br>${edit.hydrophobicity_difference}</div>
                         <div><strong>BLOSUM62</strong><br>${edit.blosum62_score}</div>
                         ${buildConservationDetails(edit)}
+                        ${buildFunctionalRegionDetails(edit)}
                     </div>
                 </div>
             `;
@@ -231,6 +247,7 @@ function displayResults(data) {
                     </div>
                     <p>${insertedText}: <strong>${edit.inserted}</strong></p>
                     ${buildIndelConservationDetails(edit)}
+                    ${buildIndelFunctionalRegionDetails(edit)}
                 </div>
             `;
         }
@@ -249,6 +266,7 @@ function displayResults(data) {
                     </div>
                     <p>${deletedText}: <strong>${edit.deleted}</strong></p>
                     ${buildIndelConservationDetails(edit)}
+                    ${buildIndelFunctionalRegionDetails(edit)}
                 </div>
             `;
         }
@@ -258,6 +276,7 @@ function displayResults(data) {
 
     const sequenceVisualizationHtml = buildSequenceVisualization(data);
     const conservationHeatmapHtml = buildConservationHeatmap(data);
+    const functionalRegionsHtml = buildFunctionalRegionsSummary(data);
 
     resultsSection.innerHTML = `
         <h2>Results</h2>
@@ -268,6 +287,7 @@ function displayResults(data) {
         <h3>Sequence comparison</h3>
         ${sequenceVisualizationHtml}
         ${conservationHeatmapHtml}
+        ${functionalRegionsHtml}
 
         <h3>Detected edits</h3>
         <div class="substitution-list">
@@ -502,6 +522,53 @@ function buildIndelConservationDetails(edit) {
     `;
 }
 
+function buildFunctionalRegionDetails(edit) {
+    if (!edit.functional_regions || edit.functional_regions.length === 0) {
+        return `<div><strong>Functional region</strong><br>none detected</div>`;
+    }
+
+    const regionNames = edit.functional_regions
+        .map((region) => `${region.description} (${region.start}-${region.end})`)
+        .join("<br>");
+
+    return `
+        <div><strong>Functional region</strong><br>${regionNames}</div>
+        <div><strong>Severity before functional region</strong><br>${edit.severity_before_functional_region || edit.severity}</div>
+        <div><strong>Severity after functional region</strong><br>${edit.severity_after_functional_region || edit.severity}</div>
+    `;
+}
+
+function buildIndelFunctionalRegionDetails(edit) {
+    if (!edit.functional_regions || edit.functional_regions.length === 0) {
+        return "";
+    }
+
+    return `
+        <div class="substitution-details">
+            ${buildFunctionalRegionDetails(edit)}
+        </div>
+    `;
+}
+
+function buildFunctionalRegionsSummary(data) {
+    if (!data.functional_regions || data.functional_regions.length === 0) {
+        return "";
+    }
+
+    const previewRegions = data.functional_regions.slice(0, 8).map((region) => `
+        <span class="functional-region-chip">
+            ${region.description} ${region.start}-${region.end}
+        </span>
+    `).join("");
+
+    return `
+        <h3>Functional regions</h3>
+        <div class="functional-region-list">
+            ${previewRegions}
+        </div>
+    `;
+}
+
 function buildConservationHeatmap(data) {
     if (!data.conservation || data.conservation.length === 0) {
         return "";
@@ -563,7 +630,7 @@ function cleanSequenceInput(sequence) {
         .toUpperCase();
 }
 
-function updateProteinInfo(topHomolog) {
+function updateProteinInfo(topHomolog, functionalRegions = []) {
     if (!topHomolog) {
         proteinInfo.innerHTML = `
             <p class="empty-state">
@@ -595,6 +662,10 @@ function updateProteinInfo(topHomolog) {
                 <div>
                     <dt>Length</dt>
                     <dd>${topHomolog.length} aa</dd>
+                </div>
+                <div>
+                    <dt>Functional regions</dt>
+                    <dd>${functionalRegions.length}</dd>
                 </div>
             </dl>
         </div>

@@ -5,6 +5,7 @@ from backend.alignment import (
     calculate_identity,
 )
 from backend.conservation import parse_aligned_fasta, calculate_conservation
+from backend.functional_regions import apply_functional_regions_to_edits
 
 def clean_sequence(sequence: str) -> str:
     lines = sequence.strip().splitlines()
@@ -283,6 +284,7 @@ def compare_proteins(
     wildtype_sequence: str,
     mutant_sequence: str,
     aligned_fasta: str | None = None,
+    functional_regions: list[dict] | None = None,
 ) -> dict:
 
     wildtype_sequence = clean_sequence(wildtype_sequence)
@@ -322,6 +324,10 @@ def compare_proteins(
             apply_conservation_to_edits(edits, conservation)
             result["conservation"] = conservation
 
+        if functional_regions:
+            apply_functional_regions_to_edits(edits, functional_regions)
+            result["functional_regions"] = functional_regions
+
         result["edits"] = edits
         return result
 
@@ -353,6 +359,9 @@ def compare_proteins(
         conservation = calculate_conservation(aligned_sequences)
         apply_conservation_to_edits(edits, conservation)
 
+    if functional_regions:
+        apply_functional_regions_to_edits(edits, functional_regions)
+
     
 
     result = {
@@ -366,5 +375,8 @@ def compare_proteins(
 
     if aligned_fasta:
         result["conservation"] = conservation
+
+    if functional_regions:
+        result["functional_regions"] = functional_regions
 
     return result

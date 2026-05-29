@@ -10,6 +10,7 @@ from threading import Event
 from Bio.Blast import NCBIXML
 
 from backend.conservation import calculate_conservation, parse_aligned_fasta
+from backend.functional_regions import fetch_functional_regions
 from backend.mutation import clean_sequence
 
 
@@ -85,12 +86,14 @@ def find_homologs_and_calculate_conservation(
 
     aligned_sequences = parse_aligned_fasta(aligned_fasta)
     conservation = calculate_conservation(aligned_sequences)
+    functional_regions = fetch_functional_regions(homologs[0]["accession"])
 
     return {
         "num_homologs": len(homologs),
         "homologs": homologs,
         "aligned_fasta": aligned_fasta,
         "conservation": conservation,
+        "functional_regions": functional_regions,
         "filters": {
             "database": "swissprot",
             "max_homologs": max_homologs,

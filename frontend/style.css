@@ -150,6 +150,39 @@ main {
     gap: 18px;
 }
 
+.analysis-actions {
+    display: grid;
+    gap: 14px;
+    margin-top: 20px;
+}
+
+.analysis-option {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 18px;
+    align-items: start;
+    padding: 16px;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    background: #fafafa;
+}
+
+.analysis-option h3 {
+    margin: 0 0 6px;
+    font-size: 17px;
+}
+
+.analysis-option p {
+    margin: 0;
+    color: #4b5563;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.deep-analysis {
+    background: #f8fafc;
+}
+
 label {
     display: block;
     margin-top: 0;
@@ -486,6 +519,23 @@ li {
     font-weight: bold;
 }
 
+.functional-region-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 12px 0 28px;
+}
+
+.functional-region-chip {
+    padding: 6px 9px;
+    border: 1px solid #c7d2fe;
+    border-radius: 999px;
+    background: #eef2ff;
+    color: #3730a3;
+    font-size: 13px;
+    font-weight: 700;
+}
+
 .substitution-list {
     display: grid;
     gap: 16px;
@@ -630,7 +680,11 @@ li {
         display: block;
     }
 
-    #analyze-button {
+    .analysis-option {
+        grid-template-columns: 1fr;
+    }
+
+    .analysis-option button {
         margin-top: 16px;
         width: 100%;
     }

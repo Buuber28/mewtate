@@ -39,7 +39,6 @@
                             <p class="panel-kicker">Sequences</p>
                             <h2>Compare proteins</h2>
                         </div>
-                        <button id="analyze-button">Analyze mutation</button>
                     </div>
 
                     <div class="sequence-input-grid">
@@ -51,6 +50,37 @@
                         <div>
                             <label for="mutant-sequence">Mutant sequence</label>
                             <textarea id="mutant-sequence" rows="5"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="analysis-actions">
+                        <div class="analysis-option">
+                            <div>
+                                <h3>Quick analysis</h3>
+                                <p>
+                                    Compares the two sequences directly. Uses custom aligned FASTA if provided,
+                                    but does not search for homologs or fetch UniProt functional regions.
+                                </p>
+                            </div>
+                            <button id="quick-analysis-button">Quick analysis</button>
+                        </div>
+
+                        <div class="analysis-option deep-analysis">
+                            <div>
+                                <h3>Deep analysis</h3>
+                                <p>
+                                    Finds homologs, builds an MSA, identifies the likely protein, fetches UniProt
+                                    functional regions, then analyzes conservation and functional impact. This can
+                                    take a minute or two.
+                                </p>
+                                <div id="deep-analysis-progress" class="progress-bar hidden">
+                                    <span></span>
+                                </div>
+                                <p id="deep-analysis-status" class="tool-status">
+                                    Runs the full homolog, conservation, and functional-region workflow.
+                                </p>
+                            </div>
+                            <button id="deep-analysis-button">Deep analysis</button>
                         </div>
                     </div>
                 </section>
@@ -70,15 +100,8 @@
                     <summary>Conservation analysis</summary>
                     <div class="homolog-search">
                         <p class="tool-description">
-                            Find homologs automatically or paste your own pre-aligned homolog sequences below. Homolog search can take a minute or two.
-                            Custom Aligned FASTA is prioritized over homolog search. 
-                        </p>
-                        <button id="find-homologs-button">Find homologs</button>
-                        <div id="homolog-search-progress" class="progress-bar hidden">
-                            <span></span>
-                        </div>
-                        <p id="homolog-search-status" class="tool-status">
-                            Search Swiss-Prot homologs and build a Clustal Omega alignment for conservation analysis.
+                            Paste your own pre-aligned homolog sequences below. Quick and deep analysis will use
+                            this custom alignment instead of an automatically generated homolog alignment.
                         </p>
                     </div>
                     <label for="aligned-fasta">Custom aligned FASTA</label>

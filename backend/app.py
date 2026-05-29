@@ -25,6 +25,7 @@ class SequenceComparisonRequest(BaseModel):
     wildtype_sequence: str
     mutant_sequence: str
     aligned_fasta: str | None = None
+    functional_regions: list[dict] | None = None
 
 class ConservationRequest(BaseModel):
     aligned_fasta: str
@@ -45,9 +46,10 @@ def read_root():
 def compare_proteins_endpoint(request: SequenceComparisonRequest):
     try:
         return compare_proteins(
-    wildtype_sequence=request.wildtype_sequence,
-    mutant_sequence=request.mutant_sequence,
-    aligned_fasta=request.aligned_fasta,
+            wildtype_sequence=request.wildtype_sequence,
+            mutant_sequence=request.mutant_sequence,
+            aligned_fasta=request.aligned_fasta,
+            functional_regions=request.functional_regions,
     )
     except ValueError as error:
         raise HTTPException(status_code=400, detail=str(error))
