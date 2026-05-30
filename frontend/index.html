@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>mewtate</title>
+    <link rel="icon" type="image/png" href="mewtateLogo.png">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -17,26 +18,47 @@
         </header>
 
         <section class="workspace-grid">
-            <aside class="panel info-panel">
-                <div class="panel-header compact">
-                    <div>
-                        <p class="panel-kicker">Protein info</p>
-                        <h2>Identity</h2>
+            <div class="left-column">
+                <aside class="panel info-panel">
+                    <div class="panel-header compact">
+                        <div>
+                            <p class="panel-kicker">Protein info</p>
+                            <h2>Identity</h2>
+                        </div>
                     </div>
-                </div>
 
-                <div id="protein-info" class="protein-info">
-                    <p class="empty-state">
-                        Use Find homologs to identify the closest reviewed protein match.
-                    </p>
-                </div>
-            </aside>
+                    <div id="protein-info" class="protein-info">
+                        <p class="empty-state">
+                            Use Deep analysis to identify the closest reviewed protein match.
+                        </p>
+                    </div>
+                </aside>
+
+                <aside class="panel sequence-library-panel">
+                    <div class="panel-header compact">
+                        <div>
+                            <p class="panel-kicker">Samples</p>
+                            <h2>Library</h2>
+                        </div>
+                    </div>
+
+                    <div class="sequence-library">
+                        <h3>Recent</h3>
+                        <div id="recent-sequences" class="sequence-list">
+                            <p class="empty-state">Recent analyzed sequences will appear here.</p>
+                        </div>
+
+                        <h3>Samples</h3>
+                        <div id="sample-sequences" class="sequence-list"></div>
+                    </div>
+                </aside>
+            </div>
 
             <div class="main-column">
                 <section class="panel sequence-panel">
                     <div class="panel-header">
                         <div>
-                            <p class="panel-kicker">Sequences</p>
+                            <p class="panel-kicker">Analyze</p>
                             <h2>Compare proteins</h2>
                         </div>
                     </div>
@@ -88,54 +110,72 @@
                 <section id="results"></section>
             </div>
 
-            <aside class="panel tools-panel">
-                <div class="panel-header compact">
-                    <div>
-                        <p class="panel-kicker">Optional tools</p>
-                        <h2>Refine input</h2>
-                    </div>
-                </div>
-
-                <details class="tool-drawer">
-                    <summary>Conservation analysis</summary>
-                    <div class="homolog-search">
-                        <p class="tool-description">
-                            Paste your own pre-aligned homolog sequences below. Quick and deep analysis will use
-                            this custom alignment instead of an automatically generated homolog alignment.
-                        </p>
-                    </div>
-                    <label for="aligned-fasta">Custom aligned FASTA</label>
-                    <textarea id="aligned-fasta" rows="7" placeholder=">seq1&#10;MKTFFVLLL&#10;>seq2&#10;MKTFFILLL&#10;>seq3&#10;MKTYFVLLL"></textarea>
-                </details>
-
-                <details class="tool-drawer">
-                    <summary>Editable mutant sequence</summary>
-                    <button id="load-sequence-button">Load sequence into editor</button>
-
-                    <div class="mutation-modes">
-                        <button id="substitute-mode-button">Substitute</button>
-                        <button id="insert-mode-button">Insert</button>
-                        <button id="delete-mode-button">Delete</button>
+            <div class="right-column">
+                <aside class="panel structure-panel" id="structure-panel">
+                    <div class="panel-header compact">
+                        <div>
+                            <p class="panel-kicker">Structure</p>
+                            <h2>3D model</h2>
+                        </div>
+                        <button id="structure-expand-button" class="icon-action" type="button">Expand</button>
                     </div>
 
-                    <div id="sequence-editor"></div>
+                    <div id="structure-viewer" class="structure-viewer"></div>
+                    <p id="structure-status" class="tool-status">
+                        Use Deep analysis to load an AlphaFold structure and map mutations onto it.
+                    </p>
+                </aside>
 
-                    <h3>Amino acid palette</h3>
-                    <div id="amino-acid-palette"></div>
-
-                    <div id="amino-acid-legend" class="hidden">
-                        <div class="legend">
-                            <span class="legend-item aa-nonpolar">Nonpolar / hydrophobic</span>
-                            <span class="legend-item aa-polar">Polar uncharged</span>
-                            <span class="legend-item aa-positive">Positively charged</span>
-                            <span class="legend-item aa-negative">Negatively charged</span>
+                <aside class="panel tools-panel">
+                    <div class="panel-header compact">
+                        <div>
+                            <p class="panel-kicker">Optional tools</p>
+                            <h2>Refine input</h2>
                         </div>
                     </div>
-                </details>
-            </aside>
+
+                    <details class="tool-drawer">
+                        <summary>Conservation analysis</summary>
+                        <div class="homolog-search">
+                            <p class="tool-description">
+                                Paste your own pre-aligned homolog sequences below. Quick and deep analysis will use
+                                this custom alignment instead of an automatically generated homolog alignment.
+                            </p>
+                        </div>
+                        <label for="aligned-fasta">Custom aligned FASTA</label>
+                        <textarea id="aligned-fasta" rows="7" placeholder=">seq1&#10;MKTFFVLLL&#10;>seq2&#10;MKTFFILLL&#10;>seq3&#10;MKTYFVLLL"></textarea>
+                    </details>
+
+                    <details class="tool-drawer">
+                        <summary>Editable mutant sequence</summary>
+                        <button id="load-sequence-button">Load sequence into editor</button>
+
+                        <div class="mutation-modes">
+                            <button id="substitute-mode-button">Substitute</button>
+                            <button id="insert-mode-button">Insert</button>
+                            <button id="delete-mode-button">Delete</button>
+                        </div>
+
+                        <div id="sequence-editor"></div>
+
+                        <h3>Amino acid palette</h3>
+                        <div id="amino-acid-palette"></div>
+
+                        <div id="amino-acid-legend" class="hidden">
+                            <div class="legend">
+                                <span class="legend-item aa-nonpolar">Nonpolar / hydrophobic</span>
+                                <span class="legend-item aa-polar">Polar uncharged</span>
+                                <span class="legend-item aa-positive">Positively charged</span>
+                                <span class="legend-item aa-negative">Negatively charged</span>
+                            </div>
+                        </div>
+                    </details>
+                </aside>
+            </div>
         </section>
     </main>
 
+    <script src="vendor/3Dmol-min.js"></script>
     <script src="app.js?v=conservation-details"></script>
 </body>
 </html>

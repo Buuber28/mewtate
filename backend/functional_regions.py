@@ -89,6 +89,19 @@ def apply_functional_regions_to_edits(edits: list, functional_regions: list[dict
 
 
 def edit_overlaps_region(edit: dict, region: dict) -> bool:
+    if edit.get("type") == "insertion":
+        insertion_position = edit.get("position")
+
+        if insertion_position is None:
+            return False
+
+        affected_positions = {insertion_position, insertion_position + 1}
+
+        return any(
+            region["start"] <= position <= region["end"]
+            for position in affected_positions
+        )
+
     edit_start = edit.get("start_position", edit.get("position"))
     edit_end = edit.get("end_position", edit.get("position"))
 
@@ -100,9 +113,6 @@ def edit_overlaps_region(edit: dict, region: dict) -> bool:
             edit_start <= region["start"] <= edit_end
             or edit_start <= region["end"] <= edit_end
         )
-
-    if edit.get("type") == "insertion":
-        return region["start"] <= edit_start <= region["end"]
 
     return edit_start <= region["end"] and edit_end >= region["start"]
 

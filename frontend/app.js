@@ -3,6 +3,8 @@ const deepAnalysisButton = document.getElementById("deep-analysis-button");
 const deepAnalysisStatus = document.getElementById("deep-analysis-status");
 const deepAnalysisProgress = document.getElementById("deep-analysis-progress");
 const resultsSection = document.getElementById("results");
+const recentSequences = document.getElementById("recent-sequences");
+const sampleSequences = document.getElementById("sample-sequences");
 const loadSequenceButton = document.getElementById("load-sequence-button");
 const sequenceEditor = document.getElementById("sequence-editor");
 const aminoAcidPalette = document.getElementById("amino-acid-palette");
@@ -11,6 +13,10 @@ const substituteModeButton = document.getElementById("substitute-mode-button");
 const insertModeButton = document.getElementById("insert-mode-button");
 const deleteModeButton = document.getElementById("delete-mode-button");
 const proteinInfo = document.getElementById("protein-info");
+const structurePanel = document.getElementById("structure-panel");
+const structureViewerElement = document.getElementById("structure-viewer");
+const structureStatus = document.getElementById("structure-status");
+const structureExpandButton = document.getElementById("structure-expand-button");
 
 substituteModeButton.addEventListener("click", () => {
     mutationMode = "substitute";
@@ -28,6 +34,16 @@ deleteModeButton.addEventListener("click", () => {
     mutationMode = "delete";
     resetSelections();
     updateModeButtons();
+});
+
+structureExpandButton?.addEventListener("click", () => {
+    const isExpanded = structurePanel.classList.toggle("expanded");
+    structureExpandButton.textContent = isExpanded ? "Collapse" : "Expand";
+    refreshStructureViewer();
+});
+
+window.addEventListener("resize", () => {
+    refreshStructureViewer();
 });
 
 
@@ -64,6 +80,24 @@ const aminoAcidClasses = {
     E: "negative",
 };
 
+const sampleProteinSequences = [
+    {
+        name: "Human insulin",
+        detail: "INS precursor",
+        sequence: "MALWMRLLPLLALLALWGPDPAAAFVNQHLCGSHLVEALYLVCGERGFFYTPKTRREAEDLQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN",
+    },
+    {
+        name: "Hemoglobin beta",
+        detail: "HBB mature chain",
+        sequence: "MVHLTPEEKSAVTALWGKVNVDEVGGEALGRLLVVYPWTQRFFESFGDLSTPDAVMGNPKVKAHGKKVLGAFSDGLAHLDNLKGTFATLSELHCDKLHVDPENFRLLGNVLVCVLAHHFGKEFTPPVQAAYQKVVAGVANALAHKYH",
+    },
+    {
+        name: "Beta-lactamase SHV-1",
+        detail: "P0AD63-like test",
+        sequence: "MSIQHFRVALIPFFAAFCLPVFAHPETLVKVKDAEDQLGARVGYIELDLNSGKILESFRPEERFPMMSTFKVLLCGAVLSRVDAGQEQLGRRIHYSQNDLVEYSPVTEKHLTDGMTVRELCSAAITMSDNTAANLLLTTIGGPKELTAFLHNMGDHVTRLDRWEPELNEAIPNDERDTTMPAAMATTLRKLLTGELLTLASRQQLIDWMEADKVAGPLLRSALPAGWFIADKSGAGERGSRGIIAALGPDGKPSRIVVIYTTGSQATMDERNRQIAEIGASLIKHW",
+    },
+];
+
 let selectedResidueIndex = null;
 let editableMutantSequence = "";
 
@@ -74,6 +108,10 @@ let foundHomologAlignedFasta = "";
 let foundHomologCount = 0;
 let deepAnalysisController = null;
 let foundFunctionalRegions = [];
+let structureViewer = null;
+let currentStructure = null;
+const analysisCacheKey = "mewtate-analysis-cache";
+const recentSequencesKey = "mewtate-recent-sequences";
 
 
 
@@ -122,6 +160,7 @@ async function analyzeMutation({ useDeepAnalysis }) {
         }
 
         displayResults(data);
+        updateStructureMutationHighlights(data.edits || data.substitutions || []);
     } catch (error) {
         if (error.name === "AbortError") {
             resultsSection.innerHTML = "<p>Deep analysis cancelled.</p>";
@@ -138,6 +177,17 @@ async function analyzeMutation({ useDeepAnalysis }) {
 }
 
 async function runDeepAnalysisSetup(wildtypeSequence) {
+    const cleanedWildtype = cleanSequenceInput(wildtypeSequence);
+    const cachedAnalysis = getCachedAnalysis(cleanedWildtype);
+
+    if (cachedAnalysis) {
+        applyDeepAnalysisData(cachedAnalysis);
+        deepAnalysisStatus.textContent =
+            `Reused cached deep analysis data for ${cachedAnalysis.display_name || "this sequence"} without rerunning BLAST/MSA. Running mutation analysis...`;
+        deepAnalysisStatus.classList.add("success");
+        return cachedAnalysis;
+    }
+
     if (deepAnalysisController) {
         deepAnalysisController.abort();
     }
@@ -156,8 +206,8 @@ async function runDeepAnalysisSetup(wildtypeSequence) {
             "Content-Type": "application/json",
         },
         body: JSON.stringify({
-            wildtype_sequence: wildtypeSequence,
-            max_homologs: 20,
+            wildtype_sequence: cleanedWildtype,
+            max_homologs: 10,
             min_identity: 30,
             max_identity: 95,
         }),
@@ -172,15 +222,24 @@ async function runDeepAnalysisSetup(wildtypeSequence) {
         throw new Error(data.detail);
     }
 
-    foundHomologAlignedFasta = data.aligned_fasta;
-    foundHomologCount = data.num_homologs;
-    foundFunctionalRegions = data.functional_regions || [];
-    updateProteinInfo(data.homologs?.[0], foundFunctionalRegions);
-    deepAnalysisStatus.textContent =
-        `Deep analysis data ready with ${foundHomologCount} filtered homologs. Running mutation analysis...`;
+    data.sequence = cleanedWildtype;
+    data.display_name = getCachedDisplayName(data);
+    cacheAnalysis(cleanedWildtype, data);
+    applyDeepAnalysisData(data);
+    renderRecentSequences();
+
+    deepAnalysisStatus.textContent = getDeepAnalysisReadyMessage(data);
     deepAnalysisStatus.classList.add("success");
 
     return data;
+}
+
+function applyDeepAnalysisData(data) {
+    foundHomologAlignedFasta = data.aligned_fasta || "";
+    foundHomologCount = data.num_homologs || 0;
+    foundFunctionalRegions = data.functional_regions || [];
+    updateProteinInfo(data.protein_match || data.homologs?.[0], foundFunctionalRegions);
+    loadProteinStructure(data.protein_match || data.homologs?.[0]);
 }
 
 window.addEventListener("pagehide", () => {
@@ -612,12 +671,11 @@ function getConservationHeatColor(score) {
     const normalizedScore = Math.max(0, Math.min(score, 100)) / 100;
     const lightness = 96 - (normalizedScore * 52);
     const saturation = 48 + (normalizedScore * 42);
-    const text = normalizedScore >= 0.72 ? "white" : "#1f2937";
 
     return {
         background: `hsl(350, ${saturation}%, ${lightness}%)`,
         border: `hsl(350, ${Math.min(saturation + 6, 96)}%, ${Math.max(lightness - 12, 34)}%)`,
-        text,
+        text: "#111827",
     };
 }
 
@@ -684,6 +742,199 @@ function getProteinMatchConfidence(topHomolog) {
     return "Closest reviewed match";
 }
 
+async function loadProteinStructure(proteinMatch) {
+    if (!structureViewerElement || !structureStatus) {
+        return;
+    }
+
+    if (!proteinMatch?.accession) {
+        currentStructure = null;
+        structureViewerElement.innerHTML = "";
+        structureStatus.textContent = "Use Deep analysis to load an AlphaFold structure and map mutations onto it.";
+        structureStatus.classList.remove("error", "success");
+        return;
+    }
+
+    const accession = proteinMatch.accession;
+
+    if (currentStructure?.accession === accession && structureViewer) {
+        return;
+    }
+
+    const threeDmol = window.$3Dmol || window["3Dmol"];
+
+    if (!threeDmol) {
+        currentStructure = null;
+        structureViewerElement.innerHTML = "";
+        structureStatus.textContent = "3Dmol.js did not load, so the structure viewer is unavailable.";
+        structureStatus.classList.add("error");
+        structureStatus.classList.remove("success");
+        return;
+    }
+
+    const structureUrls = [
+        `https://alphafold.ebi.ac.uk/files/AF-${accession}-F1-model_v6.pdb`,
+        `https://alphafold.ebi.ac.uk/files/AF-${accession}-F1-model_v5.pdb`,
+        `https://alphafold.ebi.ac.uk/files/AF-${accession}-F1-model_v4.pdb`,
+    ];
+    structureStatus.textContent = `Loading AlphaFold model for ${accession}...`;
+    structureStatus.classList.remove("error", "success");
+
+    try {
+        const structure = await fetchFirstAvailableStructure(structureUrls);
+        structureViewerElement.innerHTML = "";
+        structureViewer = threeDmol.createViewer(structureViewerElement, {
+            backgroundColor: "#ffffff",
+        });
+        structureViewer.addModel(structure.pdbText, "pdb");
+        structureViewer.setStyle({}, {
+            cartoon: {
+                color: "spectrum",
+            },
+        });
+        structureViewer.zoomTo();
+        structureViewer.render();
+        refreshStructureViewer();
+
+        currentStructure = {
+            accession,
+            structureUrl: structure.url,
+            subjectStart: proteinMatch.subject_start || 1,
+            queryLength: proteinMatch.length || null,
+        };
+        structureStatus.textContent =
+            `AlphaFold model loaded for ${accession}. Run an analysis to highlight mutations.`;
+        structureStatus.classList.add("success");
+        structureStatus.classList.remove("error");
+    } catch (error) {
+        currentStructure = null;
+        structureViewer = null;
+        structureViewerElement.innerHTML = "";
+        structureStatus.textContent =
+            `No AlphaFold structure could be loaded for ${accession}.`;
+        structureStatus.classList.add("error");
+        structureStatus.classList.remove("success");
+    }
+}
+
+async function fetchFirstAvailableStructure(urls) {
+    for (const url of urls) {
+        try {
+            const response = await fetch(url);
+
+            if (!response.ok) {
+                continue;
+            }
+
+            return {
+                url,
+                pdbText: await response.text(),
+            };
+        } catch (error) {
+            continue;
+        }
+    }
+
+    throw new Error("AlphaFold model not found.");
+}
+
+function updateStructureMutationHighlights(edits) {
+    if (!structureViewer || !currentStructure) {
+        return;
+    }
+
+    const mutationPositions = getStructureMutationPositions(edits);
+
+    structureViewer.setStyle({}, {
+        cartoon: {
+            color: "spectrum",
+        },
+    });
+
+    if (mutationPositions.length) {
+        structureViewer.addStyle(
+            {
+                resi: mutationPositions,
+            },
+            {
+                stick: {
+                    color: "#ef4444",
+                    radius: 0.35,
+                },
+                sphere: {
+                    color: "#ef4444",
+                    radius: 0.75,
+                },
+            }
+        );
+        structureViewer.zoomTo({
+            resi: mutationPositions,
+        });
+        structureStatus.textContent =
+            `Highlighted ${mutationPositions.length} mutated structure position${mutationPositions.length === 1 ? "" : "s"} on ${currentStructure.accession}.`;
+    } else {
+        structureViewer.zoomTo();
+        structureStatus.textContent =
+            `AlphaFold model loaded for ${currentStructure.accession}. No residue-changing edits to highlight.`;
+    }
+
+    structureViewer.render();
+    refreshStructureViewer();
+}
+
+function getStructureMutationPositions(edits) {
+    const positions = new Set();
+
+    edits.forEach((edit) => {
+        if (edit.type === "insertion") {
+            const insertionPosition = edit.position;
+
+            if (!insertionPosition) {
+                return;
+            }
+
+            const maxQueryPosition = currentStructure.queryLength;
+
+            if (insertionPosition > 0) {
+                positions.add(currentStructure.subjectStart + insertionPosition - 1);
+            }
+
+            if (!maxQueryPosition || insertionPosition < maxQueryPosition) {
+                positions.add(currentStructure.subjectStart + insertionPosition);
+            }
+
+            return;
+        }
+
+        const start = edit.start_position || edit.position;
+        const end = edit.end_position || edit.position;
+
+        if (!start || !end) {
+            return;
+        }
+
+        for (let position = start; position <= end; position++) {
+            positions.add(currentStructure.subjectStart + position - 1);
+        }
+    });
+
+    return [...positions];
+}
+
+function refreshStructureViewer() {
+    if (!structureViewer) {
+        return;
+    }
+
+    window.requestAnimationFrame(() => {
+        if (typeof structureViewer.resize === "function") {
+            structureViewer.resize();
+        }
+
+        structureViewer.render();
+    });
+}
+
 function formatProteinTitle(title) {
     if (!title) {
         return "Reviewed Swiss-Prot protein";
@@ -706,4 +957,159 @@ function formatProteinTitle(title) {
         .trim();
 }
 
+function renderSequenceLibrary() {
+    sampleSequences.innerHTML = sampleProteinSequences
+        .map((sample, index) => buildSequenceButtonHtml(sample, index, "sample"))
+        .join("");
+
+    sampleSequences.querySelectorAll("button").forEach((button) => {
+        button.addEventListener("click", () => {
+            const sample = sampleProteinSequences[Number(button.dataset.index)];
+            loadSequence(sample.sequence);
+        });
+    });
+
+    renderRecentSequences();
+}
+
+function renderRecentSequences() {
+    const recentItems = getRecentSequences();
+
+    if (recentItems.length === 0) {
+        recentSequences.innerHTML = `<p class="empty-state">Recent analyzed sequences will appear here.</p>`;
+        return;
+    }
+
+    recentSequences.innerHTML = recentItems
+        .map((item, index) => buildSequenceButtonHtml(item, index, "recent"))
+        .join("");
+
+    recentSequences.querySelectorAll("button").forEach((button) => {
+        button.addEventListener("click", () => {
+            const item = recentItems[Number(button.dataset.index)];
+            loadSequence(item.sequence);
+
+            const cachedAnalysis = getCachedAnalysis(item.sequence);
+
+            if (cachedAnalysis) {
+                applyDeepAnalysisData(cachedAnalysis);
+                deepAnalysisStatus.textContent =
+                    `Loaded cached deep analysis data for ${item.name}.`;
+                deepAnalysisStatus.classList.add("success");
+            }
+        });
+    });
+}
+
+function buildSequenceButtonHtml(item, index, source) {
+    return `
+        <button class="sequence-preset" data-source="${source}" data-index="${index}">
+            <strong>${item.name}</strong>
+            <span>${item.detail || `${item.sequence.length} aa`}</span>
+        </button>
+    `;
+}
+
+function loadSequence(sequence) {
+    document.getElementById("wildtype-sequence").value = sequence;
+    document.getElementById("mutant-sequence").value = sequence;
+    aminoAcidLegend.classList.remove("hidden");
+    editableMutantSequence = sequence;
+    selectedResidueIndex = null;
+    selectedInsertPosition = null;
+    renderSequenceEditor();
+    renderAminoAcidPalette();
+}
+
+function cacheAnalysis(sequence, data) {
+    const cache = getAnalysisCache();
+    cache[sequence] = data;
+    sessionStorage.setItem(analysisCacheKey, JSON.stringify(cache));
+
+    const recentItems = getRecentSequences()
+        .filter((item) => item.sequence !== sequence);
+
+    recentItems.unshift({
+        name: data.display_name || "Analyzed protein",
+        detail: getRecentSequenceDetail(sequence, data),
+        sequence,
+    });
+
+    sessionStorage.setItem(
+        recentSequencesKey,
+        JSON.stringify(recentItems.slice(0, 6))
+    );
+}
+
+function getCachedAnalysis(sequence) {
+    return getAnalysisCache()[sequence] || null;
+}
+
+function getAnalysisCache() {
+    try {
+        return JSON.parse(sessionStorage.getItem(analysisCacheKey)) || {};
+    } catch (error) {
+        return {};
+    }
+}
+
+function getRecentSequences() {
+    try {
+        return JSON.parse(sessionStorage.getItem(recentSequencesKey)) || [];
+    } catch (error) {
+        return [];
+    }
+}
+
+function getCachedDisplayName(data) {
+    const homolog = data.protein_match || data.homologs?.[0];
+
+    if (!homolog) {
+        return "Analyzed protein";
+    }
+
+    return formatProteinTitle(homolog.description || homolog.title);
+}
+
+function getRecentSequenceDetail(sequence, data) {
+    if (data.analysis_path === "uniprotkb_homolog_search") {
+        return `${sequence.length} aa · ${data.num_homologs || 0} UniProt homologs`;
+    }
+
+    if (data.analysis_path === "uniprot_exact_match") {
+        return `${sequence.length} aa · UniProt exact match`;
+    }
+
+    return `${sequence.length} aa · ${data.num_homologs || 0} homologs`;
+}
+
+function formatTimingSummary(timings) {
+    if (!timings) {
+        return "";
+    }
+
+    if (timings.uniprot_homolog_search_seconds !== undefined) {
+        return `Timing: UniProt match ${timings.uniprot_exact_match_seconds}s, homologs/MSA ${timings.uniprot_homolog_search_seconds}s.`;
+    }
+
+    if (timings.uniprot_exact_match_seconds !== undefined && timings.ncbi_blast_seconds === undefined) {
+        return `Timing: UniProt exact match ${timings.uniprot_exact_match_seconds}s.`;
+    }
+
+    return `Timing: BLAST ${timings.ncbi_blast_seconds}s, fetch ${timings.fetch_filter_homologs_seconds}s, MSA ${timings.clustal_omega_seconds}s.`;
+}
+
+function getDeepAnalysisReadyMessage(data) {
+    if (data.analysis_path === "uniprotkb_homolog_search") {
+        return `Fast UniProt homolog analysis ready with ${data.num_homologs || 0} homologs. ${formatTimingSummary(data.timings)} Running mutation analysis...`;
+    }
+
+    if (data.analysis_path === "uniprot_exact_match") {
+        return `Fast UniProt match found. ${formatTimingSummary(data.timings)} Running mutation analysis with protein identity and functional regions.`;
+    }
+
+    return `Deep analysis data ready with ${foundHomologCount} filtered homologs. ${formatTimingSummary(data.timings)} Running mutation analysis...`;
+}
+
 updateModeButtons();
+renderSequenceLibrary();

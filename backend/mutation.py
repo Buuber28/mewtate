@@ -86,27 +86,68 @@ def apply_conservation_to_edits(edits: list, conservation: list[dict]) -> None:
     }
 
     for edit in edits:
-        position = edit.get("position")
+        affected_positions = get_edit_affected_positions(edit)
+        conservation_items = [
+            conservation_by_position[position]
+            for position in affected_positions
+            if position in conservation_by_position
+        ]
 
-        if position not in conservation_by_position:
+        if not conservation_items:
             continue
 
-        conservation_item = conservation_by_position[position]
+        conservation_item = get_strongest_conservation_item(conservation_items)
         severity_before = edit["severity"]
         severity_after = severity_before
 
-        if conservation_item["label"] == "highly conserved":
+        if any(item["label"] == "highly conserved" for item in conservation_items):
             severity_after = increase_severity(severity_after)
         elif (
-            conservation_item["label"] == "moderately conserved"
+            any(item["label"] == "moderately conserved" for item in conservation_items)
             and severity_after == "low"
         ):
             severity_after = increase_severity(severity_after)
 
         edit["conservation"] = conservation_item
+        edit["conservation_positions"] = conservation_items
         edit["severity_before_conservation"] = severity_before
         edit["severity_after_conservation"] = severity_after
         edit["severity"] = severity_after
+
+
+def get_edit_affected_positions(edit: dict) -> list[int]:
+    if edit.get("type") == "insertion":
+        position = edit.get("position")
+
+        if position is None:
+            return []
+
+        return [position, position + 1]
+
+    start_position = edit.get("start_position", edit.get("position"))
+    end_position = edit.get("end_position", edit.get("position"))
+
+    if start_position is None or end_position is None:
+        return []
+
+    return list(range(start_position, end_position + 1))
+
+
+def get_strongest_conservation_item(conservation_items: list[dict]) -> dict:
+    label_rank = {
+        "gap-only": 0,
+        "variable": 1,
+        "moderately conserved": 2,
+        "highly conserved": 3,
+    }
+
+    return max(
+        conservation_items,
+        key=lambda item: (
+            label_rank.get(item["label"], 0),
+            item["conservation_score"],
+        ),
+    )
 
 def detect_alignment_edits(
     aligned_wildtype: str,
