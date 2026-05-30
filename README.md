@@ -6,11 +6,7 @@ The project is built as a  mutation-analysis sandbox: users can enter a wildtype
 
 ## Screenshots
 
-```md
 ![Dashboard](figures/scr1All.png)
-![Mutation results](figures/scr2Results.png)
-
-```
 
 ## What It Does
 
