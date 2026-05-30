@@ -2,16 +2,14 @@
 
 mewtate is an interactive bioinformatics web app for exploring how protein mutations may affect sequence properties, evolutionary conservation, functional regions, and 3D structure context.
 
-The project is built as a lightweight mutation-analysis sandbox: users can enter a wildtype protein sequence, create or paste a mutant sequence, run quick or deep analysis, and inspect the results through sequence views, mutation cards, conservation heatmaps, functional annotations, and an AlphaFold-powered structure viewer.
+The project is built as a  mutation-analysis sandbox: users can enter a wildtype protein sequence, create or paste a mutant sequence, run quick or deep analysis, and inspect the results through sequence views, mutation cards, conservation heatmaps, functional annotations, and an AlphaFold-powered structure viewer.
 
 ## Screenshots
 
-Add screenshots here:
-
 ```md
-![Dashboard](assets/dashboard.png)
-![Mutation results](assets/results.png)
-![3D structure viewer](assets/structure.png)
+![Dashboard](figures/scr1All.png)
+![Mutation results](figures/scr2Results.png)
+
 ```
 
 ## What It Does
@@ -84,33 +82,6 @@ mewtate combines several sources of evidence:
 - Vanilla JavaScript
 - 3Dmol.js for structure visualization
 
-The app intentionally avoids a large frontend framework so the core bioinformatics workflow stays easy to inspect and iterate on.
-
-## Project Structure
-
-```text
-mewtate/
-├── backend/
-│   ├── app.py
-│   ├── alignment.py
-│   ├── amino_acids.py
-│   ├── blosum.py
-│   ├── conservation.py
-│   ├── functional_regions.py
-│   ├── homologs.py
-│   ├── mutation.py
-│   └── requirements.txt
-├── frontend/
-│   ├── app.js
-│   ├── index.html
-│   ├── mewtateLogo.png
-│   ├── style.css
-│   └── vendor/
-│       └── 3Dmol-min.js
-├── assets/
-└── README.md
-```
-
 ## How To Run
 
 ### 1. Create a virtual environment
@@ -135,12 +106,6 @@ Windows PowerShell:
 .\venv\Scripts\Activate.ps1
 ```
 
-If PowerShell blocks activation:
-
-```powershell
-Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
-```
-
 macOS/Linux:
 
 ```bash
@@ -159,18 +124,6 @@ pip install -r backend/requirements.txt
 python -m uvicorn backend.app:app --reload
 ```
 
-Backend:
-
-```text
-http://127.0.0.1:8000
-```
-
-Swagger docs:
-
-```text
-http://127.0.0.1:8000/docs
-```
-
 ### 5. Open the frontend
 
 Option A: open directly in a browser:
@@ -179,77 +132,9 @@ Option A: open directly in a browser:
 frontend/index.html
 ```
 
-Option B: serve the frontend locally:
-
-```bash
-python -m http.server 5178 --bind 127.0.0.1 --directory frontend
-```
-
-Then open:
-
-```text
-http://127.0.0.1:5178/index.html
-```
-
-## Example Sequences
-
-### Substitution
-
-```text
-WT:
-MKTFFVLLL
-
-Mut:
-MKWFFVLLL
-```
-
-### Insertion
-
-```text
-WT:
-MKTFFVLLL
-
-Mut:
-MKTGFFVLLL
-```
-
-### Deletion
-
-```text
-WT:
-MKTFFVLLL
-
-Mut:
-MKFFVLLL
-```
-
-### Human Insulin
-
-```text
-MALWMRLLPLLALLALWGPDPAAAFVNQHLCGSHLVEALYLVCGERGFFYTPKTRREAEDLQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN
-```
-
-### Conservation FASTA Example
-
-```text
->seq1
-MKTFFVLLL
->seq2
-MKTFFILLL
->seq3
-MKTYFVLLL
-```
-
 ## Notes
 
 - Deep analysis uses remote services, so runtime depends on UniProt, NCBI BLAST, EMBL-EBI Clustal Omega, and AlphaFold DB availability.
 - The app does not predict a mutant protein structure from scratch. It maps mutations onto the available wildtype/reference structure when possible.
 - Recent sequence data is stored temporarily in browser session storage.
 
-## Future Ideas
-
-- Persistent project/session saving.
-- Better residue-to-structure mapping for isoforms and processed chains.
-- Domain-level summaries.
-- Solvent exposure or buried/exposed residue estimates.
-- Mutation game mode for educational exploration.
