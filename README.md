@@ -2,7 +2,16 @@
 
 mewtate is an interactive bioinformatics web app for exploring how protein mutations may affect sequence properties, evolutionary conservation, functional regions, and 3D structure context.
 
-The project is built as a  mutation-analysis sandbox: users can enter a wildtype protein sequence, create or paste a mutant sequence, run quick or deep analysis, and inspect the results through sequence views, mutation cards, conservation heatmaps, functional annotations, and an AlphaFold-powered structure viewer.
+The project is built as a mutation-analysis sandbox: users can enter a wildtype protein sequence, create or paste a mutant sequence, run quick or deep analysis, and inspect the results through sequence views, mutation cards, conservation heatmaps, functional annotations, and an AlphaFold-powered structure viewer.
+
+Live site:
+
+- https://mewtate.de
+- https://mewtate.netlify.app
+
+Backend API:
+
+- https://mewtate.onrender.com
 
 ## Screenshots
 
@@ -22,8 +31,9 @@ The project is built as a  mutation-analysis sandbox: users can enter a wildtype
 - Calculates conservation across aligned homologs.
 - Displays conservation as both mutation-card details and a sequence heatmap.
 - Fetches UniProt functional regions such as active sites, binding sites, domains, motifs, transmembrane regions, signal peptides, modified residues, and disulfide bonds.
-- Adjusts mutation severity when mutations affect conserved positions or functional regions.
-- Loads AlphaFold structures when available and maps mutations onto the 3D model.
+- Adjusts mutation severity when substitutions, insertions, or deletions affect conserved positions or functional regions.
+- Loads AlphaFold structures when available and maps mutations onto an expandable 3D model.
+- Highlights substitutions and deletions directly on the 3D structure, and highlights insertion flanks because inserted residues are not present in the wildtype/reference structure.
 - Caches recent deep-analysis results during the browser session to avoid rerunning expensive homolog and annotation steps.
 - Includes sample proteins and a recent-sequence library for faster exploration.
 
@@ -49,17 +59,17 @@ Deep analysis runs the full interpretation workflow:
 8. Calculate conservation scores.
 9. Compare wildtype and mutant sequences.
 10. Adjust severity using biochemical change, conservation, and functional-region context.
-11. Load an AlphaFold model when available and highlight affected residues.
+11. Load an AlphaFold model when available and highlight affected structure positions.
 
 ## Mutation Interpretation
 
 mewtate combines several sources of evidence:
 
 - **Biochemical severity:** charge, polarity, hydrophobicity, amino acid class, and BLOSUM62 score.
-- **Conservation severity:** mutations at highly or moderately conserved positions increase concern.
+- **Conservation severity:** substitutions, deletions, and insertions near highly or moderately conserved positions increase concern.
 - **Functional-region severity:** mutations affecting UniProt-annotated functional regions increase concern, especially high-impact regions such as active sites and binding sites.
 - **Indel handling:** consecutive insertions and deletions are grouped into clearer mutation events.
-- **Structure context:** substitutions and deletions are highlighted directly; insertions highlight the flanking structure residues because the inserted residue does not exist in the wildtype structure.
+- **Structure context:** substitutions and deletions are highlighted directly; insertions highlight the flanking structure residues because the inserted residue does not exist in the wildtype/reference structure.
 
 ## Tech Stack
 
@@ -127,6 +137,38 @@ Option A: open directly in a browser:
 ```text
 frontend/index.html
 ```
+
+Option B: serve the frontend locally:
+
+```bash
+python -m http.server 5178 --bind 127.0.0.1 --directory frontend
+```
+
+Then open:
+
+```text
+http://127.0.0.1:5178/index.html
+```
+
+By default, the deployed frontend points to:
+
+```text
+https://mewtate.onrender.com
+```
+
+For local backend development, update `apiBaseUrl` in `frontend/app.js` to:
+
+```text
+http://127.0.0.1:8000
+```
+
+## Deployment
+
+- Frontend: Netlify
+- Backend: Render
+- Custom domain: `mewtate.de`
+
+The frontend is a static site published from the `frontend/` directory. The backend is a FastAPI service started with Uvicorn.
 
 ## Notes
 
