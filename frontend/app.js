@@ -17,6 +17,7 @@ const structurePanel = document.getElementById("structure-panel");
 const structureViewerElement = document.getElementById("structure-viewer");
 const structureStatus = document.getElementById("structure-status");
 const structureExpandButton = document.getElementById("structure-expand-button");
+const apiBaseUrl = "https://mewtate.onrender.com";
 
 substituteModeButton.addEventListener("click", () => {
     mutationMode = "substitute";
@@ -139,7 +140,7 @@ async function analyzeMutation({ useDeepAnalysis }) {
             functionalRegions = deepData.functional_regions || [];
         }
 
-        const response = await fetch("http://127.0.0.1:8000/compare-proteins", {
+        const response = await fetch(`${apiBaseUrl}/compare-proteins`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -200,7 +201,7 @@ async function runDeepAnalysisSetup(wildtypeSequence) {
     quickAnalysisButton.disabled = true;
     deepAnalysisButton.disabled = true;
 
-    const response = await fetch("http://127.0.0.1:8000/find-homologs", {
+    const response = await fetch(`${apiBaseUrl}/find-homologs`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
