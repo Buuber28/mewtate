@@ -622,7 +622,10 @@ function buildFunctionalRegionsSummary(data) {
     `).join("");
 
     return `
-        <h3>Functional regions</h3>
+        <h3>
+            Functional regions
+            <span class="info-tip" tabindex="0" data-tooltip="Functional regions come from UniProt feature annotations such as active sites, binding regions, domains, motifs, and transmembrane segments. Edits inside these regions can increase severity.">i</span>
+        </h3>
         <div class="functional-region-list">
             ${previewRegions}
         </div>
@@ -658,7 +661,10 @@ function buildConservationHeatmap(data) {
         .join("");
 
     return `
-        <h3>Conservation heatmap</h3>
+        <h3>
+            Conservation heatmap
+            <span class="info-tip" tabindex="0" data-tooltip="Darker red means the position is more conserved across homologs. A mutation in a highly conserved position is more likely to affect protein function.">i</span>
+        </h3>
         <div class="conservation-legend">
             <span>Variable</span>
             <span class="conservation-gradient"></span>

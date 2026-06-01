@@ -7,14 +7,24 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <header class="site-header">
+        <div class="brand-zone">
+            <a class="brand-mark" href="#" aria-label="mewtate home">
+                <img src="mewtateLogo.png" alt="mewtate logo">
+            </a>
+        </div>
+
+    </header>
+
     <main>
         <header class="hero">
-            <p class="eyebrow">Protein mutation sandbox</p>
-            <h1>mewtate</h1>
-            <p class="hero-text">
-                Explore how amino acid substitutions change protein properties using sequence comparison
-                and mutation scoring.
-            </p>
+            <div>
+                <p class="eyebrow">Protein mutation sandbox</p>
+                <p class="hero-text">
+                    Run fast comparisons or deeper homolog-aware analysis with UniProt annotations,
+                    conservation scoring, and AlphaFold structure context.
+                </p>
+            </div>
         </header>
 
         <section class="workspace-grid">
@@ -23,7 +33,10 @@
                     <div class="panel-header compact">
                         <div>
                             <p class="panel-kicker">Protein info</p>
-                            <h2>Identity</h2>
+                            <h2>
+                                Identity
+                                <span class="info-tip" tabindex="0" data-tooltip="Deep analysis compares your sequence against UniProt matches so mewtate can show a likely protein name, organism, accession, and annotation source.">i</span>
+                            </h2>
                         </div>
                     </div>
 
@@ -78,29 +91,24 @@
                     <div class="analysis-actions">
                         <div class="analysis-option">
                             <div>
-                                <h3>Quick analysis</h3>
-                                <p>
-                                    Compares the two sequences directly. Uses custom aligned FASTA if provided,
-                                    but does not search for homologs or fetch UniProt functional regions.
-                                </p>
+                                <h3>
+                                    Quick analysis
+                                    <span class="info-tip" tabindex="0" data-tooltip="Compares wildtype and mutant sequences directly. It uses a pasted aligned FASTA if available, but skips remote homolog search and UniProt feature lookup.">i</span>
+                                </h3>
                             </div>
                             <button id="quick-analysis-button">Quick analysis</button>
                         </div>
 
                         <div class="analysis-option deep-analysis">
                             <div>
-                                <h3>Deep analysis</h3>
-                                <p>
-                                    Finds homologs, builds an MSA, identifies the likely protein, fetches UniProt
-                                    functional regions, then analyzes conservation and functional impact. This can
-                                    take a minute or two.
-                                </p>
+                                <h3>
+                                    Deep analysis
+                                    <span class="info-tip" tabindex="0" data-tooltip="Runs the full workflow: identifies likely homologs, builds an alignment, calculates conservation, fetches UniProt functional regions, and maps mutations onto structure when possible.">i</span>
+                                </h3>
                                 <div id="deep-analysis-progress" class="progress-bar hidden">
                                     <span></span>
                                 </div>
-                                <p id="deep-analysis-status" class="tool-status">
-                                    Runs the full homolog, conservation, and functional-region workflow.
-                                </p>
+                                <p id="deep-analysis-status" class="tool-status"></p>
                             </div>
                             <button id="deep-analysis-button">Deep analysis</button>
                         </div>
@@ -115,7 +123,10 @@
                     <div class="panel-header compact">
                         <div>
                             <p class="panel-kicker">Structure</p>
-                            <h2>3D model</h2>
+                            <h2>
+                                3D model
+                                <span class="info-tip" tabindex="0" data-tooltip="When AlphaFold has a predicted structure for the matched protein, substitutions and deletions are highlighted near the affected residue positions.">i</span>
+                            </h2>
                         </div>
                         <button id="structure-expand-button" class="icon-action" type="button">Expand</button>
                     </div>
@@ -135,7 +146,10 @@
                     </div>
 
                     <details class="tool-drawer">
-                        <summary>Conservation analysis</summary>
+                        <summary>
+                            Conservation analysis
+                            <span class="info-tip" tabindex="0" data-tooltip="Conservation estimates how often each residue is preserved across homologous proteins. Mutations at highly conserved positions are treated as more biologically important.">i</span>
+                        </summary>
                         <div class="homolog-search">
                             <p class="tool-description">
                                 Paste your own pre-aligned homolog sequences below. Quick and deep analysis will use
@@ -174,6 +188,19 @@
             </div>
         </section>
     </main>
+
+    <footer class="site-footer">
+        <div>
+            <p>Thanks for exploring mewtate.</p>
+        </div>
+
+        <div class="footer-links">
+            <a href="https://github.com/Buuber28" target="_blank" rel="noreferrer">GitHub</a>
+            <a href="https://www.uniprot.org/" target="_blank" rel="noreferrer">UniProt</a>
+            <a href="https://alphafold.ebi.ac.uk/" target="_blank" rel="noreferrer">AlphaFold DB</a>
+            <a href="https://www.ebi.ac.uk/jdispatcher/msa/clustalo" target="_blank" rel="noreferrer">Clustal Omega</a>
+        </div>
+    </footer>
 
     <script src="vendor/3Dmol-min.js"></script>
     <script src="app.js?v=conservation-details"></script>
