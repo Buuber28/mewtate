@@ -1165,6 +1165,86 @@ li {
         padding: 0 16px 32px;
     }
 
+    .home-page .site-header,
+    .tool-page .site-header {
+        min-height: 68px;
+        margin: 0 -16px;
+        padding: 12px 16px;
+    }
+
+    .brand-zone {
+        gap: 10px;
+        min-width: 0;
+    }
+
+    .brand-mark {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+    }
+
+    .brand-mark img {
+        width: 30px;
+        height: 30px;
+    }
+
+    .brand-copy {
+        min-width: 0;
+    }
+
+    .brand-copy strong {
+        font-size: 16px;
+    }
+
+    .brand-copy span {
+        font-size: 11px;
+        white-space: nowrap;
+    }
+
+    .home-main,
+    .tool-main {
+        width: 100%;
+        border-right: 1px solid #cbd5e1;
+        border-left: 1px solid #cbd5e1;
+        box-sizing: border-box;
+    }
+
+    .tool-directory {
+        padding: 22px 18px 28px;
+    }
+
+    .tool-row {
+        grid-template-columns: 1fr;
+        gap: 10px;
+        padding: 18px 0;
+    }
+
+    .tool-row h3 {
+        font-size: 22px;
+    }
+
+    .tool-row > span {
+        justify-self: start;
+    }
+
+    .tool-intro {
+        padding: 22px 18px 20px;
+    }
+
+    .tool-intro h1 {
+        font-size: 30px;
+        line-height: 1.18;
+    }
+
+    .tool-intro .hero-text {
+        font-size: 15px;
+        line-height: 1.55;
+    }
+
+    .tool-page .workspace-grid {
+        padding: 18px 14px 0;
+    }
+
     .workspace-grid,
     .sequence-input-grid,
     .hero,
@@ -1172,8 +1252,34 @@ li {
         grid-template-columns: 1fr;
     }
 
+    .workspace-grid,
+    .main-column,
+    .left-column,
+    .right-column {
+        gap: 14px;
+    }
+
+    .panel,
+    #results {
+        padding: 18px;
+    }
+
+    .panel h2 {
+        font-size: 21px;
+    }
+
+    .analysis-option {
+        gap: 12px;
+        padding: 14px;
+    }
+
     .footer-links {
         justify-content: flex-start;
+    }
+
+    .site-footer {
+        gap: 18px;
+        padding: 22px 18px;
     }
 
     .panel-header {
