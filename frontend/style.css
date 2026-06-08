@@ -62,7 +62,7 @@ main {
 
 .brand-copy {
     display: grid;
-    gap: 2px;
+    gap: 0;
 }
 
 .brand-copy strong {
@@ -1031,9 +1031,9 @@ li {
 
 .tool-row {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 28px;
-    align-items: center;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+    align-items: start;
     padding: 22px 0;
     border-top: 1px solid #dbe3f0;
     color: inherit;
@@ -1058,15 +1058,23 @@ li {
     line-height: 1.6;
 }
 
-.tool-row > span {
+.tool-row:hover h3 {
     color: #0f766e;
-    font-size: 14px;
-    font-weight: 800;
 }
 
-.tool-row:hover h3,
-.tool-row:hover > span {
-    color: #0f766e;
+.tool-hover-description {
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transform: translateY(-2px);
+    transition: max-height 0.18s ease, opacity 0.18s ease, transform 0.18s ease;
+}
+
+.tool-row:hover .tool-hover-description,
+.tool-row:focus-visible .tool-hover-description {
+    max-height: 80px;
+    opacity: 1;
+    transform: translateY(0);
 }
 
 .tool-type {
