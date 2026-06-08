@@ -1,8 +1,10 @@
 # mewtate
 
-mewtate is an interactive bioinformatics web app for exploring how protein mutations may affect sequence properties, evolutionary conservation, functional regions, and 3D structure context.
+mewtate is a small bioinformatics website for hosting interactive web tools.
 
-The project is built as a mutation-analysis sandbox: users can enter a wildtype protein sequence, create or paste a mutant sequence, run quick or deep analysis, and inspect the results through sequence views, mutation cards, conservation heatmaps, functional annotations, and an AlphaFold-powered structure viewer.
+The first tool in the site is the **Mutation sandbox**, an interactive protein mutation analysis app for exploring how sequence changes may affect biochemical properties, evolutionary conservation, functional regions, and 3D structure context.
+
+In the Mutation sandbox, users can enter a wildtype protein sequence, create or paste a mutant sequence, run quick or deep analysis, and inspect the results through sequence views, mutation cards, conservation heatmaps, functional annotations, and an AlphaFold-powered structure viewer.
 
 Live site:
 
@@ -17,7 +19,13 @@ Backend API:
 
 ![Dashboard](figures/scr1All.png)
 
-## What It Does
+## Website Structure
+
+- **Home page:** a simple mewtate landing page that links to available tools.
+- **Mutation sandbox:** the protein mutation analysis tool at `frontend/mutation-sandbox.html`.
+- **Backend API:** FastAPI service used by the Mutation sandbox for sequence comparison, homolog discovery, conservation analysis, UniProt annotations, and structure metadata.
+
+## Mutation Sandbox Features
 
 - Compares wildtype and mutant protein sequences.
 - Detects substitutions, insertions, deletions, and grouped multi-residue indels.
@@ -148,6 +156,12 @@ Then open:
 
 ```text
 http://127.0.0.1:5178/index.html
+```
+
+The mutation analysis tool is available at:
+
+```text
+http://127.0.0.1:5178/mutation-sandbox.html
 ```
 
 By default, the deployed frontend points to:
