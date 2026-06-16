@@ -9,11 +9,6 @@ In the Mutation sandbox, users can enter a wildtype protein sequence, create or 
 Live site:
 
 - https://mewtate.de
-- https://mewtate.netlify.app
-
-Backend API:
-
-- https://mewtate.onrender.com
 
 ## Screenshots
 
