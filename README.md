@@ -91,7 +91,7 @@ mewtate combines several sources of evidence:
 - Vanilla JavaScript
 - 3Dmol.js for structure visualization
 
-## How To Run
+## How To Run Locally
 
 ### 1. Create a virtual environment
 
